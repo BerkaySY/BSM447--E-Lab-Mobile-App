@@ -9,11 +9,11 @@ const WelcomeScreen = ({ navigation }) => {
     >
       {/* Logo ve Title Kısmı*/}
       <Image
-        source={require('../assets/labLogo.png')} 
+        source={require('../../assets/labLogo.png')} 
         style={styles.logo}
       />
       <Text style={styles.title}>Berkay LAB</Text>
-      <Text style={styles.welcomeText}>Hoşgeldiniz</Text>
+      <Text style={styles.welcomeText}>Hoş geldiniz</Text>
 
       {/*Giriş yapma formuna yönlendirme */}
       <TouchableOpacity

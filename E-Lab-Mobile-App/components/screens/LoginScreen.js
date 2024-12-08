@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   View,
   Text,
@@ -14,68 +14,108 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
+import { app } from '../../firebase'; // Firebase app tanımını import ediyoruz
+
+const auth = getAuth(app);
+const firestore = getFirestore(app);
 
 const LoginScreen = ({ navigation }) => {
-  //Alınan girdiyi işleyebilmek için state atamaları
-  const [tc, setTC] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const validateTC = (tc) => {
-    if (tc.length !== 11 || isNaN(tc) || tc[0] === '0') {
-      return false;
-    }
-    return true;
+  const validateEmail = (email) => {
+    const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return regex.test(email);
   };
 
-  //Giriş denemesinin kontrol edilmesi için
-  const handleLogin = () => {
-    //Geçerli TC kimlik no girildi mi?
-    if (!validateTC(tc)) {
-      Alert.alert('Hata', 'Geçerli bir T.C. kimlik numarası girin.');
+  const handleLogin = async () => {
+    if (!validateEmail(email)) {
+      Alert.alert('Hata', 'Geçerli bir e-posta adresi girin.');
       return;
     }
-    //Şifre uzunluk kontrolü
     if (password.length < 6) {
       Alert.alert('Hata', 'Şifre en az 6 karakter olmalıdır.');
       return;
     }
-    Alert.alert('Başarılı', 'Giriş başarılı!');
+
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      try {
+        const userDocRef = doc(firestore, 'users', user.uid);
+        const userDoc = await getDoc(userDocRef);
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          const role = userData.role;
+
+          if (role === 'admin') {
+            Alert.alert('Başarılı', 'Yönetici paneline hoş geldiniz.');
+            navigation.navigate('WelcomeScreen');
+          } else if (role === 'user') {
+            Alert.alert('Başarılı', `Hoş geldiniz, ${user.email}`);
+            navigation.navigate('UserDashboard');
+          } else {
+            Alert.alert('Hata', 'Kullanıcı rolü tanımlanamadı.');
+          }
+        } else {
+          Alert.alert('Hata', 'Kullanıcı verileri Firestore\'da bulunamadı.');
+        }
+      } catch (firestoreError) {
+        Alert.alert('Hata', 'Firestore verilerine erişilemedi.');
+        console.error(firestoreError);
+      }
+    } catch (authError) {
+      console.log("Hata kodu:", authError.code, "Mesaj:", authError.message);
+      switch (authError.code) {
+        case 'auth/user-not-found':
+          Alert.alert('Hata', 'Bu e-posta adresiyle kayıtlı bir kullanıcı bulunamadı.');
+          break;
+        case 'auth/wrong-password':
+          Alert.alert('Hata', 'Yanlış şifre. Lütfen tekrar deneyin.');
+          break;
+        case 'auth/invalid-email':
+          Alert.alert('Hata', 'Geçersiz e-posta adresi.');
+          break;
+        default:
+          Alert.alert('Hata', 'Giriş sırasında bir hata oluştu.');
+      }
+    }
   };
 
-  // Web kısmı dışında ekranın dışına dokunulduğunda klavyeyi kapatma işlevi
   const dismissKeyboard = () => {
     if (Platform.OS !== 'web') Keyboard.dismiss();
   };
 
   return (
     <TouchableWithoutFeedback onPress={dismissKeyboard} accessible={false}>
-      <LinearGradient
-        colors={['#d32f2f', '#ff5252']}
-        style={styles.container}
-      >
+      <LinearGradient colors={['#d32f2f', '#ff5252']} style={styles.container}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={styles.keyboardView}
         >
-          {/*Logo ve Title kısmı */}
-          <Image source={require('../assets/labLogo.png')} style={styles.logo} />
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.navigate('WelcomeScreen')}
+          >
+            <Ionicons name="arrow-back-outline" size={40} color="#fff" />
+          </TouchableOpacity>
+          <Image source={require('../../assets/labLogo.png')} style={styles.logo} />
           <Text style={styles.title}>Berkay-LAB</Text>
-
-          {/* T.C. Kimlik Girişi */}
           <View style={styles.inputContainer}>
-            <Ionicons name="person" size={20} style={styles.icon} />
+            <Ionicons name="mail" size={20} style={styles.icon} />
             <TextInput
               style={styles.input}
-              placeholder="T.C. Kimlik No"
+              placeholder="E-posta Adresi"
               placeholderTextColor="#aaa"
-              value={tc}
-              onChangeText={setTC}
-              keyboardType="number-pad"
-              maxLength={11}
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
             />
           </View>
-
-          {/* Şifre Girişi */}
           <View style={styles.inputContainer}>
             <Ionicons name="lock-closed" size={20} style={styles.icon} />
             <TextInput
@@ -88,21 +128,11 @@ const LoginScreen = ({ navigation }) => {
               maxLength={16}
             />
           </View>
-
-          {/* Giriş Yap Butonu */}
-          <TouchableOpacity
-            style={styles.button}
-            onPress={handleLogin}
-          >
-            <LinearGradient
-              colors={['#42a5f5', '#90caf9']}
-              style={styles.buttonGradient}
-            >
+          <TouchableOpacity style={styles.button} onPress={handleLogin}>
+            <LinearGradient colors={['#42a5f5', '#90caf9']} style={styles.buttonGradient}>
               <Text style={styles.buttonText}>Giriş Yap</Text>
             </LinearGradient>
           </TouchableOpacity>
-
-          {/* Kayıtlı hesabı yoksa kayıt olabilmesi için yönlendirme */}
           <TouchableOpacity onPress={() => navigation?.navigate('Register')}>
             <Text style={styles.registerText}>
               Hesabım Yok?{' '}
@@ -111,7 +141,6 @@ const LoginScreen = ({ navigation }) => {
               </Text>
             </Text>
           </TouchableOpacity>
-
         </KeyboardAvoidingView>
       </LinearGradient>
     </TouchableWithoutFeedback>
@@ -190,6 +219,12 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
     textAlign: 'center',
+  },
+  backButton: {
+    position: 'absolute',
+    top: 40,
+    left: 20,
+    zIndex: 1,
   },
 });
 
