@@ -1,31 +1,78 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native'; // React Navigation'dan import
+import { auth, firestore } from '../../firebase';
 
 const AdminDashboard = () => {
   const [isSideMenuVisible, setSideMenuVisible] = useState(false);
+  const [isProfileMenuVisible, setProfileMenuVisible] = useState(false);
+  const [userName, setUserName] = useState('');
+  const navigation = useNavigation(); // Navigation hook
 
   const toggleSideMenu = () => setSideMenuVisible(!isSideMenuVisible);
+  const toggleProfileMenu = () => setProfileMenuVisible(!isProfileMenuVisible);
+
+  useEffect(() => {
+    const user = auth.currentUser;
+    if (user) {
+      const userId = user.uid;
+      const userRef = firestore.collection('users').doc(userId);
+      userRef.get().then((doc) => {
+        if (doc.exists) {
+          const userData = doc.data();
+          setUserName(`${userData.fullName}`);
+        }
+      });
+    }
+  }, []);
 
   const statsData = [
     { id: '1', icon: 'person', label: 'Kullanıcılar', value: '2500' },
     { id: '2', icon: 'medkit', label: 'Tahliller', value: '123.50 dk' },
   ];
 
+  const handleLogOut = () => {
+    auth
+      .signOut()
+      .then(() => {
+        navigation.replace('WelcomeScreen'); // Kullanıcıyı yönlendir
+        setTimeout(() => {
+          Alert.alert("Çıkış Yap", "Başarıyla çıkış yapıldı!", [{ text: "Tamam" }]); // Yönlendirme sonrası mesaj göster
+        }, 100);
+      })
+      .catch((error) => {
+        console.error(error.message);
+      });
+  };
   return (
     <View style={styles.container}>
-      {/* Top Bar */}
+      {/* Üst Bar */}
       <View style={styles.topBar}>
         <TouchableOpacity style={styles.menuIcon} onPress={toggleSideMenu}>
           <Ionicons name="menu" size={24} color="white" />
         </TouchableOpacity>
         <View style={styles.profileSection}>
-          <Ionicons name="person-circle" size={24} color="white" />
-          <Text style={styles.adminName}>Admin</Text>
+          <TouchableOpacity style={styles.profileTouchable} onPress={toggleProfileMenu}>
+            <Ionicons name="person-circle" size={24} color="white" />
+            <Text style={styles.adminName}>{userName || 'Admin'}</Text>
+          </TouchableOpacity>
         </View>
       </View>
 
-      {/* Side Menu */}
+      {/* Profil Menüsü */}
+      {isProfileMenuVisible && (
+        <View style={styles.profileMenu}>
+          <TouchableOpacity style={styles.profileMenuItem}>
+            <Text style={styles.profileMenuText}>Profil Düzenle</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.profileMenuItem} onPress={handleLogOut}>
+            <Text style={styles.profileMenuText}>Çıkış Yap</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* Yan Menü */}
       {isSideMenuVisible && (
         <View style={styles.sideMenu}>
           <TouchableOpacity style={styles.sideMenuItem}>
@@ -43,12 +90,10 @@ const AdminDashboard = () => {
         </View>
       )}
 
-      {/* Main Content */}
+      {/* Ana İçerik */}
       <View style={styles.mainContent}>
-        {/* Logo */}
         <Image source={require('../../assets/labLogo.png')} style={styles.labLogo} />
-        
-        {/* Stats */}
+
         {statsData.map((item) => (
           <View key={item.id} style={styles.statCard}>
             <Ionicons name={item.icon} size={40} color="#007BFF" />
@@ -81,11 +126,37 @@ const styles = StyleSheet.create({
   profileSection: {
     flexDirection: 'row',
     alignItems: 'center',
+    position: 'relative',
   },
   adminName: {
     color: 'white',
     marginLeft: 10,
     fontSize: 18,
+  },
+  profileMenu: {
+    position: 'absolute',
+    top: 90,
+    right: 0,
+    backgroundColor: '#fff',
+    padding: 10,
+    borderRadius: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 5,
+    zIndex: 10,
+  },
+  profileMenuItem: {
+    paddingVertical: 10,
+  },
+  profileMenuText: {
+    fontSize: 16,
+    color: '#007BFF',
+  },
+  profileTouchable: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   sideMenu: {
     position: 'absolute',
