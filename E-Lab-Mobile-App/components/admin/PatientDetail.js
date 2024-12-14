@@ -4,11 +4,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native'; 
 import { auth, firestore } from '../../firebase';
 
-const AdminDashboard = () => {
+const PatientDetail = () => {
   const [isSideMenuVisible, setSideMenuVisible] = useState(false);
   const [isProfileMenuVisible, setProfileMenuVisible] = useState(false);
   const [userName, setUserName] = useState('');
-  const [isDarkMode, setIsDarkMode] = useState(false); // State to track mode
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const navigation = useNavigation(); 
 
   const toggleSideMenu = () => {
@@ -31,7 +31,7 @@ const AdminDashboard = () => {
   };
 
   const handleModeToggle = () => {
-    setIsDarkMode(!isDarkMode); // Toggle dark mode
+    setIsDarkMode(!isDarkMode); 
   };
 
   useEffect(() => {
@@ -47,11 +47,6 @@ const AdminDashboard = () => {
       });
     }
   }, []);
-
-  const statsData = [
-    { id: '1', icon: 'person', label: 'Kullanıcılar', value: '2500' },
-    { id: '2', icon: 'medkit', label: 'Tahliller', value: '123.50 dk' },
-  ];
 
   const handleLogOut = () => {
     auth
@@ -90,7 +85,6 @@ const AdminDashboard = () => {
             <TouchableOpacity style={styles.sideMenuItem} onPress={handleLogOut}>
               <Text style={[styles.sideMenuText, isDarkMode && styles.darkText]}>Çıkış Yap</Text>
             </TouchableOpacity>
-            {/* Dark/Light Mode Toggle Switch */}
             <View style={styles.modeToggleContainer}>
               <Text style={[styles.modeToggleText, isDarkMode && styles.darkText]}>
                 {isDarkMode ? 'Karanlık Mod' : 'Aydınlık Mod'}
@@ -126,13 +120,7 @@ const AdminDashboard = () => {
 
         {/* Ana İçerik */}
         <View style={styles.mainContent}>
-          {statsData.map((item) => (
-            <View key={item.id} style={[styles.statCard, isDarkMode && styles.darkStatCard]}>
-              <Ionicons name={item.icon} size={40} color="#007BFF" />
-              <Text style={[styles.statValue, isDarkMode && styles.darkText]}>{item.value}</Text>
-              <Text style={[styles.statLabel, isDarkMode && styles.darkText]}>{item.label}</Text>
-            </View>
-          ))}
+          
         </View>
       </View>
     </TouchableWithoutFeedback>
@@ -268,4 +256,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AdminDashboard;
+export default PatientDetail;

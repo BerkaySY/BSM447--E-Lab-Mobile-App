@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, Alert, TouchableWithoutFeedback, Switch } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, TouchableWithoutFeedback, Switch, TextInput, FlatList } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native'; 
 import { auth, firestore } from '../../firebase';
 
-const AdminDashboard = () => {
+const PatientTracking = () => {
   const [isSideMenuVisible, setSideMenuVisible] = useState(false);
   const [isProfileMenuVisible, setProfileMenuVisible] = useState(false);
   const [userName, setUserName] = useState('');
-  const [isDarkMode, setIsDarkMode] = useState(false); // State to track mode
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [patients, setPatients] = useState([]);
+  const [filteredPatients, setFilteredPatients] = useState([]);
   const navigation = useNavigation(); 
 
   const toggleSideMenu = () => {
@@ -31,7 +34,11 @@ const AdminDashboard = () => {
   };
 
   const handleModeToggle = () => {
-    setIsDarkMode(!isDarkMode); // Toggle dark mode
+    setIsDarkMode(!isDarkMode);
+  };
+
+  const handleSearchChange = (text) => {
+    setSearchQuery(text);
   };
 
   useEffect(() => {
@@ -48,11 +55,66 @@ const AdminDashboard = () => {
     }
   }, []);
 
-  const statsData = [
-    { id: '1', icon: 'person', label: 'Kullanıcılar', value: '2500' },
-    { id: '2', icon: 'medkit', label: 'Tahliller', value: '123.50 dk' },
-  ];
+  useEffect(() => {
+    const fetchPatients = async () => {
+      try {
+        const usersRef = firestore.collection('users')
+          .where('role', '==', 'user');
+        
+        const snapshot = await usersRef.get();
+        const patientsList = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setPatients(patientsList);
+        setFilteredPatients(patientsList);
+      } catch (error) {
+        console.error("Error fetching patients: ", error);
+        Alert.alert("Hata", "Hastalar yüklenirken bir sorun oluştu.");
+      }
+    };
 
+    fetchPatients();
+  }, []);
+
+  useEffect(() => {
+    if (searchQuery) {
+      const filtered = patients.filter(patient => 
+        patient.fullName.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setFilteredPatients(filtered);
+    } else {
+      setFilteredPatients(patients);
+    }
+  }, [searchQuery, patients]);
+
+  const renderPatientItem = ({ item }) => (
+    <TouchableOpacity 
+      style={[
+        styles.patientItem, 
+        isDarkMode && styles.darkPatientItem
+      ]}
+      onPress={() => {
+         navigation.navigate('PatientDetail', { patientId: item.id });
+      }}
+    >
+      <View style={styles.patientItemContent}>
+        <Text style={[
+          styles.patientName, 
+          isDarkMode && styles.darkText
+        ]}>
+          {item.fullName}
+        </Text>
+        <Text style={[
+          styles.patientEmail, 
+          isDarkMode && styles.darkText
+        ]}>
+          {item.email}
+        </Text>
+        <Text style={{ color: 'blue' }}>Detaylar</Text>
+      </View>
+    </TouchableOpacity>
+  );
   const handleLogOut = () => {
     auth
       .signOut()
@@ -90,7 +152,6 @@ const AdminDashboard = () => {
             <TouchableOpacity style={styles.sideMenuItem} onPress={handleLogOut}>
               <Text style={[styles.sideMenuText, isDarkMode && styles.darkText]}>Çıkış Yap</Text>
             </TouchableOpacity>
-            {/* Dark/Light Mode Toggle Switch */}
             <View style={styles.modeToggleContainer}>
               <Text style={[styles.modeToggleText, isDarkMode && styles.darkText]}>
                 {isDarkMode ? 'Karanlık Mod' : 'Aydınlık Mod'}
@@ -126,13 +187,39 @@ const AdminDashboard = () => {
 
         {/* Ana İçerik */}
         <View style={styles.mainContent}>
-          {statsData.map((item) => (
-            <View key={item.id} style={[styles.statCard, isDarkMode && styles.darkStatCard]}>
-              <Ionicons name={item.icon} size={40} color="#007BFF" />
-              <Text style={[styles.statValue, isDarkMode && styles.darkText]}>{item.value}</Text>
-              <Text style={[styles.statLabel, isDarkMode && styles.darkText]}>{item.label}</Text>
-            </View>
-          ))}
+          {/* Arama Kutusu */}
+          <View style={styles.searchBarContainer}>
+            <TextInput
+              style={[styles.searchBar, isDarkMode && styles.darkSearchBar]}
+              placeholder="Hasta Ara..."
+              placeholderTextColor={isDarkMode ? '#ccc' : '#888'}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              maxLength={20}
+            />
+            <Ionicons 
+              name="search" 
+              size={24} 
+              color={isDarkMode ? '#ccc' : '#888'} 
+              style={styles.searchIcon} 
+            />
+          </View>
+          {/* Hasta Listesi */}
+          <FlatList
+            data={filteredPatients}
+            renderItem={renderPatientItem}
+            keyExtractor={(item) => item.id}
+            style={[styles.patientList, isDarkMode && styles.darkPatientList]}
+            ListEmptyComponent={
+              <View style={styles.emptyListContainer}>
+                <Text style={[styles.emptyListText, isDarkMode && styles.darkText]}>
+                  {searchQuery 
+                    ? 'Arama kriterlerine uyan hasta bulunamadı.' 
+                    : 'Henüz hasta kaydı bulunmuyor.'}
+                </Text>
+              </View>
+            }
+          />
         </View>
       </View>
     </TouchableWithoutFeedback>
@@ -237,35 +324,73 @@ const styles = StyleSheet.create({
   mainContent: {
     alignItems: 'center',
     padding: 20,
+    flex: 1,
   },
-  labLogo: {
-    width: 120,
-    height: 120,
-    marginBottom: 20,
-  },
-  statCard: {
-    width: '90%',
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 15,
+  searchBarContainer: {
+    width: '70%', 
     alignItems: 'center',
-    elevation: 2,
+    flexDirection: 'row', 
   },
-  darkStatCard: {
-    backgroundColor: '#555',
+  searchBar: {
+    width: '100%',
+    padding: 10,
+    borderRadius: 25, 
+    borderWidth: 1,
+    borderColor: '#007BFF',
+    backgroundColor: '#fff',
+    fontSize: 16,
   },
-  statLabel: {
-    fontSize: 14,
-    color: '#555',
-    marginTop: 5,
+  darkSearchBar: {
+    backgroundColor: '#444',
+    borderColor: '#555',
   },
-  statValue: {
-    fontSize: 22,
+  searchIcon: {
+    position: 'absolute',
+    right: 10,
+    top: 10,
+  },
+  patientList: {
+    width: '100%',
+    marginTop: 20,
+  },
+  darkPatientList: {
+    backgroundColor: '#333',
+  },
+  patientItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  darkPatientItem: {
+    backgroundColor: '#444',
+    borderBottomColor: '#555',
+  },
+  patientItemContent: {
+    flex: 1,
+    marginRight: 10,
+  },
+  patientName: {
+    fontSize: 18,
     fontWeight: 'bold',
+    color: '#333',
+  },
+  patientEmail: {
+    fontSize: 14,
+    color: '#666',
     marginTop: 5,
-    color: '#007BFF',
+  },
+  emptyListContainer: {
+    alignItems: 'center',
+    marginTop: 50,
+  },
+  emptyListText: {
+    fontSize: 16,
+    color: '#888',
   },
 });
 
-export default AdminDashboard;
+export default PatientTracking;
