@@ -1,15 +1,29 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, Alert, TouchableWithoutFeedback, Switch } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, TouchableWithoutFeedback, Switch, Button, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native'; 
 import { auth, firestore } from '../../firebase';
 
-const PatientDetail = () => {
+const EditGuidelineScreen = () => {
   const [isSideMenuVisible, setSideMenuVisible] = useState(false);
   const [isProfileMenuVisible, setProfileMenuVisible] = useState(false);
   const [userName, setUserName] = useState('');
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false); 
   const navigation = useNavigation(); 
+
+  const [guideName, setGuideName] = useState('');
+  const [valueNames, setValueNames] = useState(['']);
+
+  const addValueField = () => {
+    setValueNames([...valueNames, '']);
+  };
+
+  const updateValueName = (text, index) => {
+    const updatedValues = [...valueNames];
+    updatedValues[index] = text;
+    setValueNames(updatedValues);
+  };
+
 
   const toggleSideMenu = () => {
     if (isProfileMenuVisible) {
@@ -31,7 +45,7 @@ const PatientDetail = () => {
   };
 
   const handleModeToggle = () => {
-    setIsDarkMode(!isDarkMode); 
+    setIsDarkMode(!isDarkMode);
   };
 
   useEffect(() => {
@@ -42,7 +56,7 @@ const PatientDetail = () => {
       userRef.get().then((doc) => {
         if (doc.exists) {
           const userData = doc.data();
-          setUserName(`${userData.fullName}`);
+          setUserName(userData.fullName);
         }
       });
     }
@@ -102,16 +116,16 @@ const PatientDetail = () => {
         {/* Yan Menü */}
         {isSideMenuVisible && (
           <View style={[styles.sideMenu, isDarkMode && styles.darkSideMenu]}>
-            <TouchableOpacity style={styles.sideMenuItem} onPress={() => navigation.navigate('AdminDashboard')}>
+            <TouchableOpacity style={styles.sideMenuItem} onPress={() => navigation.navigate('AdminHomeScreen')}>
               <Ionicons name="stats-chart" size={20} color="#007BFF" style={styles.sideMenuIcon} />
               <Text style={[styles.sideMenuText, isDarkMode && styles.darkText]}>İstatistikler</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.sideMenuItem} onPress={() => navigation.navigate('PatientTracking')}>
+            <TouchableOpacity style={styles.sideMenuItem} onPress={() => navigation.navigate('PatientTrackingScreen')}>
               <Ionicons name="people" size={20} color="#007BFF" style={styles.sideMenuIcon} />
               <Text style={[styles.sideMenuText, isDarkMode && styles.darkText]}>Hasta Takibi</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.sideMenuItem} onPress={() => navigation.navigate('GuideCreation')}>
+            <TouchableOpacity style={styles.sideMenuItem} onPress={() => navigation.navigate('GuidelinesScreen')}>
               <Ionicons name="book" size={20} color="#007BFF" style={styles.sideMenuIcon} />
               <Text style={[styles.sideMenuText, isDarkMode && styles.darkText]}>Kılavuzlar</Text>
             </TouchableOpacity>
@@ -119,9 +133,34 @@ const PatientDetail = () => {
         )}
 
         {/* Ana İçerik */}
-        <View style={styles.mainContent}>
-          
-        </View>
+        <ScrollView style={styles.mainContent}>
+          <View style={styles.card}>
+            <Text style={styles.label}>Kılavuz Adı:</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Kılavuz adı giriniz"
+              value={guideName}
+              onChangeText={setGuideName}
+            />
+
+            <Text style={styles.label}>Değer Adları:</Text>
+            {valueNames.map((value, index) => (
+              <TextInput
+                key={index}
+                style={styles.input}
+                placeholder={`Değer ${index + 1}`}
+                value={value}
+                onChangeText={(text) => updateValueName(text, index)}
+              />
+            ))}
+
+            <TouchableOpacity style={styles.addButton} onPress={addValueField}>
+              <Text style={styles.addButtonText}>+</Text>
+            </TouchableOpacity>
+
+            <Button title="Kılavuzu Oluştur" />
+          </View>
+        </ScrollView>
       </View>
     </TouchableWithoutFeedback>
   );
@@ -226,34 +265,47 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
   },
-  labLogo: {
-    width: 120,
-    height: 120,
-    marginBottom: 20,
-  },
-  statCard: {
+  
+  card: {
     width: '90%',
     backgroundColor: '#fff',
     borderRadius: 10,
-    padding: 15,
-    marginBottom: 15,
-    alignItems: 'center',
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
     elevation: 2,
+    alignItems: 'center',
   },
-  darkStatCard: {
-    backgroundColor: '#555',
-  },
-  statLabel: {
-    fontSize: 14,
-    color: '#555',
-    marginTop: 5,
-  },
-  statValue: {
-    fontSize: 22,
+  label: {
+    fontSize: 16,
     fontWeight: 'bold',
-    marginTop: 5,
-    color: '#007BFF',
+    marginBottom: 10,
+    alignSelf: 'flex-start',
+  },
+  input: {
+    width: '100%',
+    height: 40,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    marginBottom: 10,
+  },
+  addButton: {
+    backgroundColor: '#007BFF',
+    borderRadius: 5,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    marginBottom: 20,
+  },
+  addButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 
-export default PatientDetail;
+export default EditGuidelineScreen;

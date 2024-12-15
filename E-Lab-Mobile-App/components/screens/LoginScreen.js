@@ -53,7 +53,7 @@ const LoginScreen = ({ navigation }) => {
 
           if (role === 'admin') {
             Alert.alert('Başarılı', 'Yönetici paneline hoş geldiniz.');
-            navigation.navigate('AdminDashboard');
+            navigation.navigate('AdminHomeScreen');
           } else if (role === 'user') {
             Alert.alert('Başarılı', `Hoş geldiniz, ${user.email}`);
             navigation.navigate('UserDashboard');

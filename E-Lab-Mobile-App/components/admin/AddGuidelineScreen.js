@@ -1,18 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, TouchableWithoutFeedback, Switch, TextInput, FlatList } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, TouchableWithoutFeedback, Switch,TextInput, KeyboardAvoidingView, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native'; 
 import { auth, firestore } from '../../firebase';
+import { Picker } from '@react-native-picker/picker';
 
-const PatientTracking = () => {
+
+const AddGuidelineScreen = () => {
   const [isSideMenuVisible, setSideMenuVisible] = useState(false);
   const [isProfileMenuVisible, setProfileMenuVisible] = useState(false);
   const [userName, setUserName] = useState('');
-  const [isDarkMode, setIsDarkMode] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [patients, setPatients] = useState([]);
-  const [filteredPatients, setFilteredPatients] = useState([]);
+  const [isDarkMode, setIsDarkMode] = useState(false); 
   const navigation = useNavigation(); 
+
+  const [ageRange, setAgeRange] = useState('');
+  const [selectedValueName, setSelectedValueName] = useState('');
+  const [minValue, setMinValue] = useState('');
+  const [maxValue, setMaxValue] = useState('');
+  const valueNames = ['Değer 1', 'Değer 2', 'Değer 3'];
 
   const toggleSideMenu = () => {
     if (isProfileMenuVisible) {
@@ -37,10 +42,6 @@ const PatientTracking = () => {
     setIsDarkMode(!isDarkMode);
   };
 
-  const handleSearchChange = (text) => {
-    setSearchQuery(text);
-  };
-
   useEffect(() => {
     const user = auth.currentUser;
     if (user) {
@@ -49,72 +50,20 @@ const PatientTracking = () => {
       userRef.get().then((doc) => {
         if (doc.exists) {
           const userData = doc.data();
-          setUserName(`${userData.fullName}`);
+          setUserName(userData.fullName);
         }
       });
     }
   }, []);
 
-  useEffect(() => {
-    const fetchPatients = async () => {
-      try {
-        const usersRef = firestore.collection('users')
-          .where('role', '==', 'user');
-        
-        const snapshot = await usersRef.get();
-        const patientsList = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-        setPatients(patientsList);
-        setFilteredPatients(patientsList);
-      } catch (error) {
-        console.error("Error fetching patients: ", error);
-        Alert.alert("Hata", "Hastalar yüklenirken bir sorun oluştu.");
-      }
-    };
-
-    fetchPatients();
-  }, []);
-
-  useEffect(() => {
-    if (searchQuery) {
-      const filtered = patients.filter(patient => 
-        patient.fullName.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-      setFilteredPatients(filtered);
-    } else {
-      setFilteredPatients(patients);
+  const handleAddData = () => {
+    if (!ageRange || !selectedValueName || !minValue || !maxValue) {
+      Alert.alert('Hata', 'Lütfen tüm alanları doldurun!');
+      return;
     }
-  }, [searchQuery, patients]);
+    Alert.alert('Başarı', 'Veri başarıyla eklendi!');
+  };
 
-  const renderPatientItem = ({ item }) => (
-    <TouchableOpacity 
-      style={[
-        styles.patientItem, 
-        isDarkMode && styles.darkPatientItem
-      ]}
-      onPress={() => {
-         navigation.navigate('PatientDetail', { patientId: item.id });
-      }}
-    >
-      <View style={styles.patientItemContent}>
-        <Text style={[
-          styles.patientName, 
-          isDarkMode && styles.darkText
-        ]}>
-          {item.fullName}
-        </Text>
-        <Text style={[
-          styles.patientEmail, 
-          isDarkMode && styles.darkText
-        ]}>
-          {item.email}
-        </Text>
-        <Text style={{ color: 'blue' }}>Detaylar</Text>
-      </View>
-    </TouchableOpacity>
-  );
   const handleLogOut = () => {
     auth
       .signOut()
@@ -169,16 +118,16 @@ const PatientTracking = () => {
         {/* Yan Menü */}
         {isSideMenuVisible && (
           <View style={[styles.sideMenu, isDarkMode && styles.darkSideMenu]}>
-            <TouchableOpacity style={styles.sideMenuItem} onPress={() => navigation.navigate('AdminDashboard')}>
+            <TouchableOpacity style={styles.sideMenuItem} onPress={() => navigation.navigate('AdminHomeScreen')}>
               <Ionicons name="stats-chart" size={20} color="#007BFF" style={styles.sideMenuIcon} />
               <Text style={[styles.sideMenuText, isDarkMode && styles.darkText]}>İstatistikler</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.sideMenuItem} onPress={() => navigation.navigate('PatientTracking')}>
+            <TouchableOpacity style={styles.sideMenuItem} onPress={() => navigation.navigate('PatientTrackingScreen')}>
               <Ionicons name="people" size={20} color="#007BFF" style={styles.sideMenuIcon} />
               <Text style={[styles.sideMenuText, isDarkMode && styles.darkText]}>Hasta Takibi</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.sideMenuItem} onPress={() => navigation.navigate('GuideCreation')}>
+            <TouchableOpacity style={styles.sideMenuItem} onPress={() => navigation.navigate('GuidelinesScreen')}>
               <Ionicons name="book" size={20} color="#007BFF" style={styles.sideMenuIcon} />
               <Text style={[styles.sideMenuText, isDarkMode && styles.darkText]}>Kılavuzlar</Text>
             </TouchableOpacity>
@@ -186,41 +135,56 @@ const PatientTracking = () => {
         )}
 
         {/* Ana İçerik */}
-        <View style={styles.mainContent}>
-          {/* Arama Kutusu */}
-          <View style={styles.searchBarContainer}>
-            <TextInput
-              style={[styles.searchBar, isDarkMode && styles.darkSearchBar]}
-              placeholder="Hasta Ara..."
-              placeholderTextColor={isDarkMode ? '#ccc' : '#888'}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              maxLength={20}
-            />
-            <Ionicons 
-              name="search" 
-              size={24} 
-              color={isDarkMode ? '#ccc' : '#888'} 
-              style={styles.searchIcon} 
-            />
-          </View>
-          {/* Hasta Listesi */}
-          <FlatList
-            data={filteredPatients}
-            renderItem={renderPatientItem}
-            keyExtractor={(item) => item.id}
-            style={[styles.patientList, isDarkMode && styles.darkPatientList]}
-            ListEmptyComponent={
-              <View style={styles.emptyListContainer}>
-                <Text style={[styles.emptyListText, isDarkMode && styles.darkText]}>
-                  {searchQuery 
-                    ? 'Arama kriterlerine uyan hasta bulunamadı.' 
-                    : 'Henüz hasta kaydı bulunmuyor.'}
-                </Text>
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
+          <ScrollView contentContainerStyle={styles.contentContainer}>
+            <View style={[styles.card, isDarkMode && styles.cardDark]}>
+              <Text style={[styles.label, isDarkMode && styles.darkText]}>Yaş Aralığı</Text>
+              <TextInput
+                style={[styles.input, isDarkMode && styles.inputDark]}
+                value={ageRange}
+                onChangeText={setAgeRange}
+                placeholder="Örn: 18-25"
+                placeholderTextColor={isDarkMode ? '#aaa' : '#888'}
+              />
+
+              <Text style={[styles.label, isDarkMode && styles.darkText]}>Değer Adı</Text>
+              <View style={[styles.pickerContainer, isDarkMode && styles.pickerDark]}>
+                <Picker
+                  selectedValue={selectedValueName}
+                  onValueChange={(itemValue) => setSelectedValueName(itemValue)}
+                >
+                  <Picker.Item label="Seçiniz" value="" />
+                  {valueNames.map((valueName, index) => (
+                    <Picker.Item key={index} label={valueName} value={valueName} />
+                  ))}
+                </Picker>
               </View>
-            }
-          />
-        </View>
+
+              <Text style={[styles.label, isDarkMode && styles.darkText]}>Minimum Değer</Text>
+              <TextInput
+                style={[styles.input, isDarkMode && styles.inputDark]}
+                value={minValue}
+                onChangeText={setMinValue}
+                keyboardType="numeric"
+                placeholder="Min değer"
+                placeholderTextColor={isDarkMode ? '#aaa' : '#888'}
+              />
+
+              <Text style={[styles.label, isDarkMode && styles.darkText]}>Maksimum Değer</Text>
+              <TextInput
+                style={[styles.input, isDarkMode && styles.inputDark]}
+                value={maxValue}
+                onChangeText={setMaxValue}
+                keyboardType="numeric"
+                placeholder="Max değer"
+                placeholderTextColor={isDarkMode ? '#aaa' : '#888'}
+              />
+              <TouchableOpacity style={styles.button} onPress={handleAddData}>
+                <Text style={styles.buttonText}>Veriyi Ekle</Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </View>
     </TouchableWithoutFeedback>
   );
@@ -324,73 +288,75 @@ const styles = StyleSheet.create({
   mainContent: {
     alignItems: 'center',
     padding: 20,
-    flex: 1,
   },
-  searchBarContainer: {
-    width: '70%', 
-    alignItems: 'center',
-    flexDirection: 'row', 
-  },
-  searchBar: {
-    width: '100%',
-    padding: 10,
-    borderRadius: 25, 
-    borderWidth: 1,
-    borderColor: '#007BFF',
-    backgroundColor: '#fff',
+  label: {
     fontSize: 16,
-  },
-  darkSearchBar: {
-    backgroundColor: '#444',
-    borderColor: '#555',
-  },
-  searchIcon: {
-    position: 'absolute',
-    right: 10,
-    top: 10,
-  },
-  patientList: {
-    width: '100%',
-    marginTop: 20,
-  },
-  darkPatientList: {
-    backgroundColor: '#333',
-  },
-  patientItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    padding: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  darkPatientItem: {
-    backgroundColor: '#444',
-    borderBottomColor: '#555',
-  },
-  patientItemContent: {
-    flex: 1,
-    marginRight: 10,
-  },
-  patientName: {
-    fontSize: 18,
     fontWeight: 'bold',
+    marginBottom: 5,
     color: '#333',
   },
-  patientEmail: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 5,
+  input: {
+    height: 40,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    marginBottom: 15,
+    backgroundColor: '#fff',
+    color: '#333',
   },
-  emptyListContainer: {
+  inputDark: {
+    backgroundColor: '#555',
+    borderColor: '#777',
+    color: '#fff',
+  },
+  pickerContainer: {
+    height: 40,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 5,
+    justifyContent: 'center',
+    marginBottom: 15,
+    backgroundColor: '#fff',
+  },
+  picker: {
+    height: 40,
+    width: '100%',
+  },
+  pickerDark: {
+    backgroundColor: '#555',
+    borderColor: '#777',
+  },
+  button: {
+    backgroundColor: '#007BFF',
+    paddingVertical: 10,
+    borderRadius: 5,
     alignItems: 'center',
-    marginTop: 50,
   },
-  emptyListText: {
+  buttonText: {
+    color: '#fff',
     fontSize: 16,
-    color: '#888',
+    fontWeight: 'bold',
+  },
+  contentContainer: {
+    flexGrow: 1,
+    alignItems: 'center',
+    padding: 20,
+  },
+  card: {
+    width: '90%',
+    padding: 20,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 5,
+  },
+  cardDark: {
+    backgroundColor: '#333',
   },
 });
 
-export default PatientTracking;
+export default AddGuidelineScreen;

@@ -1,14 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, Alert, TouchableWithoutFeedback, Switch } from 'react-native';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  TouchableOpacity, 
+  FlatList, 
+  Alert, 
+  TouchableWithoutFeedback, 
+  Switch 
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native'; 
 import { auth, firestore } from '../../firebase';
+import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 
-const GuideCreation = () => {
+const GuidelinesScreen = () => {
   const [isSideMenuVisible, setSideMenuVisible] = useState(false);
   const [isProfileMenuVisible, setProfileMenuVisible] = useState(false);
   const [userName, setUserName] = useState('');
   const [isDarkMode, setIsDarkMode] = useState(false); 
+  const [guidelines, setGuidelines] = useState([]);
   const navigation = useNavigation(); 
 
   const toggleSideMenu = () => {
@@ -38,15 +49,36 @@ const GuideCreation = () => {
     const user = auth.currentUser;
     if (user) {
       const userId = user.uid;
-      const userRef = firestore.collection('users').doc(userId);
-      userRef.get().then((doc) => {
+      const userRef = doc(firestore, 'users', userId);
+      getDocs(collection(firestore, 'users', userId, 'tests')).then((docSnap) => {
+        // Örneğin, kullanıcı verilerini çekmek
+      });
+
+      // Kullanıcı adını çekme
+      firestore.collection('users').doc(userId).get().then((doc) => {
         if (doc.exists) {
           const userData = doc.data();
           setUserName(`${userData.fullName}`);
         }
       });
     }
+
+    // Kılavuzları çekme
+    fetchGuidelines();
   }, []);
+
+  const fetchGuidelines = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(firestore, 'guidelines'));
+      const guidelinesData = [];
+      querySnapshot.forEach((doc) => {
+        guidelinesData.push({ id: doc.id, ...doc.data() });
+      });
+      setGuidelines(guidelinesData);
+    } catch (error) {
+      console.error("Kılavuzlar çekilirken hata oluştu: ", error);
+    }
+  };
 
   const handleLogOut = () => {
     auth
@@ -61,6 +93,25 @@ const GuideCreation = () => {
         console.error(error.message);
       });
   };
+
+  const handleAddGuideline = () => {
+    // Yeni kılavuz eklemek için bir ekran veya modal navigasyonu
+    navigation.navigate('AddGuidelineScreen');
+  };
+
+  const handleEditGuideline = (id) => {
+    // Kılavuz düzenleme ekranına navigasyon
+    navigation.navigate('EditGuidelineScreen', { guidelineId: id });
+  };
+
+  const renderGuidelineItem = ({ item }) => (
+    <View style={[styles.guidelineItem, isDarkMode && styles.darkGuidelineItem]}>
+      <Text style={[styles.guidelineText, isDarkMode && styles.darkText]}>{item.name}</Text>
+      <TouchableOpacity onPress={() => handleEditGuideline(item.id)}>
+        <Ionicons name="create-outline" size={24} color="#007BFF" />
+      </TouchableOpacity>
+    </View>
+  );
 
   return (
     <TouchableWithoutFeedback onPress={closeMenus}>
@@ -102,16 +153,16 @@ const GuideCreation = () => {
         {/* Yan Menü */}
         {isSideMenuVisible && (
           <View style={[styles.sideMenu, isDarkMode && styles.darkSideMenu]}>
-            <TouchableOpacity style={styles.sideMenuItem} onPress={() => navigation.navigate('AdminDashboard')}>
+            <TouchableOpacity style={styles.sideMenuItem} onPress={() => navigation.navigate('AdminHomeScreen')}>
               <Ionicons name="stats-chart" size={20} color="#007BFF" style={styles.sideMenuIcon} />
               <Text style={[styles.sideMenuText, isDarkMode && styles.darkText]}>İstatistikler</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.sideMenuItem} onPress={() => navigation.navigate('PatientTracking')}>
+            <TouchableOpacity style={styles.sideMenuItem} onPress={() => navigation.navigate('PatientTrackingScreen')}>
               <Ionicons name="people" size={20} color="#007BFF" style={styles.sideMenuIcon} />
               <Text style={[styles.sideMenuText, isDarkMode && styles.darkText]}>Hasta Takibi</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.sideMenuItem} onPress={() => navigation.navigate('GuideCreation')}>
+            <TouchableOpacity style={styles.sideMenuItem} onPress={() => navigation.navigate('GuidelinesScreen')}>
               <Ionicons name="book" size={20} color="#007BFF" style={styles.sideMenuIcon} />
               <Text style={[styles.sideMenuText, isDarkMode && styles.darkText]}>Kılavuzlar</Text>
             </TouchableOpacity>
@@ -120,7 +171,21 @@ const GuideCreation = () => {
 
         {/* Ana İçerik */}
         <View style={styles.mainContent}>
-          
+          {/* Kılavuzlar Başlığı ve Ekle Butonu */}
+          <View style={styles.header}>
+            <Text style={[styles.headerText, isDarkMode && styles.darkText]}>Kılavuzlar</Text>
+            <TouchableOpacity style={styles.addButton} onPress={handleAddGuideline}>
+              <Text style={styles.addButtonText}>Kılavuz Ekle</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Kılavuzlar Listesi */}
+          <FlatList
+            data={guidelines}
+            keyExtractor={(item) => item.id}
+            renderItem={renderGuidelineItem}
+            contentContainerStyle={styles.guidelinesList}
+          />
         </View>
       </View>
     </TouchableWithoutFeedback>
@@ -223,37 +288,50 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   mainContent: {
-    alignItems: 'center',
+    flex: 1,
     padding: 20,
   },
-  labLogo: {
-    width: 120,
-    height: 120,
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 20,
   },
-  statCard: {
-    width: '90%',
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 15,
+  headerText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  addButton: {
+    backgroundColor: 'green',
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    borderRadius: 5,
+  },
+  addButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+  guidelinesList: {
+    // İsteğe bağlı: Listeyi kaydırılabilir yapmak için
+  },
+  guidelineItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    padding: 15,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    marginBottom: 10,
     elevation: 2,
   },
-  darkStatCard: {
+  darkGuidelineItem: {
     backgroundColor: '#555',
   },
-  statLabel: {
-    fontSize: 14,
-    color: '#555',
-    marginTop: 5,
-  },
-  statValue: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginTop: 5,
-    color: '#007BFF',
+  guidelineText: {
+    fontSize: 16,
+    color: '#333',
   },
 });
 
-export default GuideCreation;
+export default GuidelinesScreen;

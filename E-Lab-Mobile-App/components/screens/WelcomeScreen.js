@@ -18,7 +18,7 @@ const WelcomeScreen = ({ navigation }) => {
       {/*Giriş yapma formuna yönlendirme */}
       <TouchableOpacity
         style={styles.button}
-        onPress={() => navigation.navigate('Login')} 
+        onPress={() => navigation.navigate('LoginScreen')} 
       >
         <LinearGradient
           colors={['#d32f2f', '#ff5252']}

@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, Alert, TouchableWithoutFeedback, Switch } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Alert, TouchableWithoutFeedback, Switch, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native'; 
+import { useNavigation, useRoute } from '@react-navigation/native'; 
 import { auth, firestore } from '../../firebase';
 
-const AdminDashboard = () => {
+const PatientDetailScreen = () => {
   const [isSideMenuVisible, setSideMenuVisible] = useState(false);
   const [isProfileMenuVisible, setProfileMenuVisible] = useState(false);
   const [userName, setUserName] = useState('');
-  const [isDarkMode, setIsDarkMode] = useState(false); // State to track mode
-  const navigation = useNavigation(); 
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [patientDetails, setPatientDetails] = useState([]);
+  const [patientTests, setPatientTests] = useState([]);
+  const navigation = useNavigation();
+  const route = useRoute();
 
   const toggleSideMenu = () => {
     if (isProfileMenuVisible) {
@@ -31,7 +34,7 @@ const AdminDashboard = () => {
   };
 
   const handleModeToggle = () => {
-    setIsDarkMode(!isDarkMode); // Toggle dark mode
+    setIsDarkMode(!isDarkMode); 
   };
 
   useEffect(() => {
@@ -42,17 +45,31 @@ const AdminDashboard = () => {
       userRef.get().then((doc) => {
         if (doc.exists) {
           const userData = doc.data();
-          setUserName(`${userData.fullName}`);
+          setUserName(userData.fullName);
         }
       });
     }
   }, []);
 
-  const statsData = [
-    { id: '1', icon: 'person', label: 'Kullanıcılar', value: '2500' },
-    { id: '2', icon: 'medkit', label: 'Tahliller', value: '123.50 dk' },
-  ];
+  useEffect(() => {
+    const fetchPatientDetails = async () => {
+      try {
+        const { patientId } = route.params;
+        const patientDoc = await firestore.collection('users').doc(patientId).get();
+        if (patientDoc.exists) { 
+          setPatientDetails(patientDoc.data());
+        }
+      } catch (error) {
+        console.error("Error fetching patient details:", error);
+        Alert.alert("Hata", "Hasta bilgileri yüklenemedi.");
+      }
+    };
 
+    fetchPatientDetails();
+  }, [route.params]);
+
+  
+  
   const handleLogOut = () => {
     auth
       .signOut()
@@ -90,7 +107,6 @@ const AdminDashboard = () => {
             <TouchableOpacity style={styles.sideMenuItem} onPress={handleLogOut}>
               <Text style={[styles.sideMenuText, isDarkMode && styles.darkText]}>Çıkış Yap</Text>
             </TouchableOpacity>
-            {/* Dark/Light Mode Toggle Switch */}
             <View style={styles.modeToggleContainer}>
               <Text style={[styles.modeToggleText, isDarkMode && styles.darkText]}>
                 {isDarkMode ? 'Karanlık Mod' : 'Aydınlık Mod'}
@@ -108,31 +124,46 @@ const AdminDashboard = () => {
         {/* Yan Menü */}
         {isSideMenuVisible && (
           <View style={[styles.sideMenu, isDarkMode && styles.darkSideMenu]}>
-            <TouchableOpacity style={styles.sideMenuItem} onPress={() => navigation.navigate('AdminDashboard')}>
+            <TouchableOpacity style={styles.sideMenuItem} onPress={() => navigation.navigate('AdminHomeScreen')}>
               <Ionicons name="stats-chart" size={20} color="#007BFF" style={styles.sideMenuIcon} />
               <Text style={[styles.sideMenuText, isDarkMode && styles.darkText]}>İstatistikler</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.sideMenuItem} onPress={() => navigation.navigate('PatientTracking')}>
+            <TouchableOpacity style={styles.sideMenuItem} onPress={() => navigation.navigate('PatientTrackingScreen')}>
               <Ionicons name="people" size={20} color="#007BFF" style={styles.sideMenuIcon} />
               <Text style={[styles.sideMenuText, isDarkMode && styles.darkText]}>Hasta Takibi</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.sideMenuItem} onPress={() => navigation.navigate('GuideCreation')}>
+            <TouchableOpacity style={styles.sideMenuItem} onPress={() => navigation.navigate('GuidelinesScreen')}>
               <Ionicons name="book" size={20} color="#007BFF" style={styles.sideMenuIcon} />
               <Text style={[styles.sideMenuText, isDarkMode && styles.darkText]}>Kılavuzlar</Text>
             </TouchableOpacity>
           </View>
         )}
-
+        
         {/* Ana İçerik */}
         <View style={styles.mainContent}>
-          {statsData.map((item) => (
-            <View key={item.id} style={[styles.statCard, isDarkMode && styles.darkStatCard]}>
-              <Ionicons name={item.icon} size={40} color="#007BFF" />
-              <Text style={[styles.statValue, isDarkMode && styles.darkText]}>{item.value}</Text>
-              <Text style={[styles.statLabel, isDarkMode && styles.darkText]}>{item.label}</Text>
+          {patientDetails && (
+            <View style={[styles.patientCard, isDarkMode && styles.darkPatientCard]}>
+              <View style={styles.patientCardContent}>
+                <View style={styles.patientIconContainer}>
+                  <Ionicons name="person-circle" size={50} color="#007BFF" />
+                </View>
+                <View style={styles.patientInfoContainer}>
+                  <Text style={[styles.patientName, isDarkMode && styles.darkText]}>
+                    {patientDetails.fullName}
+                  </Text>
+                  <Text style={[styles.patientDetail, isDarkMode && styles.darkText]}>
+                    E-posta: {patientDetails.email}
+                  </Text>
+                  {patientDetails.birthDate && (
+                    <Text style={[styles.patientDetail, isDarkMode && styles.darkText]}>
+                      Doğum Tarihi: {patientDetails.birthDate}
+                    </Text>
+                  )}
+                </View>
+              </View>
             </View>
-          ))}
+          )}
         </View>
       </View>
     </TouchableWithoutFeedback>
@@ -235,7 +266,6 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   mainContent: {
-    alignItems: 'center',
     padding: 20,
   },
   labLogo: {
@@ -266,6 +296,134 @@ const styles = StyleSheet.create({
     marginTop: 5,
     color: '#007BFF',
   },
+  profileCard: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 3,
+  },
+  darkProfileCard: {
+    backgroundColor: '#444',
+  },
+  profileHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  profileInfo: {
+    marginLeft: 15,
+    flex: 1,
+  },
+  profileName: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  profileDetail: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 3,
+  },
+  testsSection: {
+    flex: 1,
+  },
+  testsSectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  testItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  darkTestItem: {
+    backgroundColor: '#444',
+    borderBottomColor: '#555',
+  },
+  testItemContent: {
+    flex: 1,
+    marginRight: 10,
+  },
+  testName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  testDate: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 5,
+  },
+  testDetailsButton: {
+    backgroundColor: '#007BFF',
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    borderRadius: 5,
+  },
+  darkTestDetailsButton: {
+    backgroundColor: '#0056b3',
+  },
+  testDetailsButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  emptyTestsContainer: {
+    alignItems: 'center',
+    marginTop: 50,
+  },
+  emptyTestsText: {
+    fontSize: 16,
+    color: '#888',
+  },
+  patientCard: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 3,
+  },
+  darkPatientCard: {
+    backgroundColor: '#444',
+  },
+  patientCardContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 20,
+  },
+  patientIconContainer: {
+    marginRight: 20,
+  },
+  patientInfoContainer: {
+    flex: 1,
+  },
+  patientName: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  patientDetail: {
+    fontSize: 16,
+    marginBottom: 5,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#888',
+  },
 });
 
-export default AdminDashboard;
+export default PatientDetailScreen;
