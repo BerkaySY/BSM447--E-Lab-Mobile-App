@@ -1,36 +1,44 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, TouchableWithoutFeedback, Switch, Button, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, TouchableWithoutFeedback, Switch, ScrollView, TextInput,Button} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native'; 
+import { useNavigation, useRoute } from '@react-navigation/native'; 
 import { auth, firestore } from '../../firebase';
 
 const EditGuidelineScreen = () => {
-  const [isSideMenuVisible, setSideMenuVisible] = useState(false);
-  const [isProfileMenuVisible, setProfileMenuVisible] = useState(false);
-  const [userName, setUserName] = useState('');
-  const [isDarkMode, setIsDarkMode] = useState(false); 
-  const navigation = useNavigation(); 
+    const [isSideMenuVisible, setSideMenuVisible] = useState(false);
+    const [isProfileMenuVisible, setProfileMenuVisible] = useState(false);
+    const [userName, setUserName] = useState('');
+    const [isDarkMode, setIsDarkMode] = useState(false);
+    const [guideName, setGuideName] = useState('');
+    const [valueNames, setValueNames] = useState(['']);
+  
+    const navigation = useNavigation();
+    const route = useRoute();
+    const { guidelineId } = route.params; 
+  
+    const addValueField = () => {
+      setValueNames([...valueNames, '']);
+    };
 
-  const [guideName, setGuideName] = useState('');
-  const [valueNames, setValueNames] = useState(['']);
-
-  const addValueField = () => {
-    setValueNames([...valueNames, '']);
-  };
-
-  const updateValueName = (text, index) => {
-    const updatedValues = [...valueNames];
-    updatedValues[index] = text;
-    setValueNames(updatedValues);
-  };
-
-
-  const toggleSideMenu = () => {
-    if (isProfileMenuVisible) {
-      setProfileMenuVisible(false); 
-    }
-    setSideMenuVisible(!isSideMenuVisible);
-  };
+    const removeLastValueField = () => {
+        if (valueNames.length > 1) {
+          setValueNames(valueNames.slice(0, -1));
+        } else {
+          Alert.alert('Uyarı', 'En az bir değer alanı olmalıdır.');
+        }
+    };
+  
+    const updateValueName = (text, index) => {
+      const updatedValues = [...valueNames];
+      updatedValues[index] = text;
+      setValueNames(updatedValues);
+    };
+    const toggleSideMenu = () => {
+        if (isProfileMenuVisible) {
+        setProfileMenuVisible(false); 
+        }
+        setSideMenuVisible(!isSideMenuVisible);
+    };
   
   const toggleProfileMenu = () => {
     if (isSideMenuVisible) {
@@ -48,6 +56,22 @@ const EditGuidelineScreen = () => {
     setIsDarkMode(!isDarkMode);
   };
 
+  const fetchGuidelineData = async () => {
+    try {
+      const guidelineDoc = await firestore.collection('guidelines').doc(guidelineId).get();
+      if (guidelineDoc.exists) {
+        const guidelineData = guidelineDoc.data();
+        setGuideName(guidelineData.name || '');
+        setValueNames(guidelineData.value_names || ['']);
+      } else {
+        Alert.alert('Hata', 'Kılavuz bulunamadı.');
+        navigation.goBack();
+      }
+    } catch (error) {
+      console.error('Veri çekme hatası:', error);
+      Alert.alert('Hata', 'Kılavuz verisi alınırken bir hata oluştu.');
+    }
+  };
   useEffect(() => {
     const user = auth.currentUser;
     if (user) {
@@ -56,11 +80,38 @@ const EditGuidelineScreen = () => {
       userRef.get().then((doc) => {
         if (doc.exists) {
           const userData = doc.data();
-          setUserName(userData.fullName);
+          setUserName(`${userData.fullName}`);
         }
       });
     }
-  }, []);
+    fetchGuidelineData();
+  }, [guidelineId]);
+
+  const handleUpdateGuide = async () => {
+    if (!guideName.trim()) {
+      Alert.alert('Hata', 'Kılavuz adını giriniz.');
+      return;
+    }
+    if (valueNames.some(value => !value.trim())) {
+      Alert.alert('Hata', 'Tüm değer alanlarını doldurunuz.');
+      return;
+    }
+
+    try {
+      const updatedGuide = {
+        name: guideName,
+        value_names: valueNames,
+      };
+
+      await firestore.collection('guidelines').doc(guidelineId).update(updatedGuide);
+
+      Alert.alert('Başarılı', 'Kılavuz başarıyla güncellendi.');
+      navigation.replace("GuidelinesScreen"); 
+    } catch (error) {
+      console.error('Firestore güncelleme hatası:', error);
+      Alert.alert('Hata', 'Kılavuz güncellenirken bir hata oluştu.');
+    }
+  };
 
   const handleLogOut = () => {
     auth
@@ -99,6 +150,7 @@ const EditGuidelineScreen = () => {
             <TouchableOpacity style={styles.sideMenuItem} onPress={handleLogOut}>
               <Text style={[styles.sideMenuText, isDarkMode && styles.darkText]}>Çıkış Yap</Text>
             </TouchableOpacity>
+            {/* Dark/Light Mode Toggle Switch */}
             <View style={styles.modeToggleContainer}>
               <Text style={[styles.modeToggleText, isDarkMode && styles.darkText]}>
                 {isDarkMode ? 'Karanlık Mod' : 'Aydınlık Mod'}
@@ -133,33 +185,39 @@ const EditGuidelineScreen = () => {
         )}
 
         {/* Ana İçerik */}
-        <ScrollView style={styles.mainContent}>
-          <View style={styles.card}>
-            <Text style={styles.label}>Kılavuz Adı:</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Kılavuz adı giriniz"
-              value={guideName}
-              onChangeText={setGuideName}
-            />
-
-            <Text style={styles.label}>Değer Adları:</Text>
-            {valueNames.map((value, index) => (
-              <TextInput
-                key={index}
+        <ScrollView contentContainerStyle={styles.mainContent}>
+            <View style={styles.card}>
+                <Text style={styles.label}>Kılavuz Adı:</Text>
+                <TextInput
                 style={styles.input}
-                placeholder={`Değer ${index + 1}`}
-                value={value}
-                onChangeText={(text) => updateValueName(text, index)}
-              />
-            ))}
+                placeholder="Kılavuz adı giriniz"
+                value={guideName}
+                onChangeText={setGuideName}
+                />
 
-            <TouchableOpacity style={styles.addButton} onPress={addValueField}>
-              <Text style={styles.addButtonText}>+</Text>
-            </TouchableOpacity>
+                <Text style={styles.label}>Değer Adları:</Text>
+                {valueNames.map((value, index) => (
+                <TextInput
+                    key={index}
+                    style={styles.input}
+                    placeholder={`Değer ${index + 1}`}
+                    value={value}
+                    onChangeText={(text) => updateValueName(text, index)}
+                />
+                ))}
 
-            <Button title="Kılavuzu Oluştur" />
-          </View>
+                <View style={styles.buttonContainer}>
+                <TouchableOpacity style={styles.addButton} onPress={addValueField}>
+                    <Text style={styles.addButtonText}>+</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.removeButton} onPress={removeLastValueField}>
+                    <Text style={styles.removeButtonText}>-</Text>
+                </TouchableOpacity>
+                </View>
+                <TouchableOpacity style={styles.updateButton} onPress={handleUpdateGuide}>
+                    <Text style={styles.updateButtonText}>Kılavuzu Güncelle</Text>
+                </TouchableOpacity>
+            </View>
         </ScrollView>
       </View>
     </TouchableWithoutFeedback>
@@ -265,7 +323,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
   },
-  
   card: {
     width: '90%',
     backgroundColor: '#fff',
@@ -295,13 +352,46 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   addButton: {
-    backgroundColor: '#007BFF',
+    backgroundColor: '#28a745',
+    padding: 10,
     borderRadius: 5,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    marginBottom: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+    flex: 1,
   },
   addButtonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  removeButton: {
+    backgroundColor: '#dc3545',
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1,
+  },
+  removeButtonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
+  updateButton: {
+    backgroundColor: '#007BFF',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    marginTop: 20, 
+  },
+  updateButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',

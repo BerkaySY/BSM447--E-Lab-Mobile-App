@@ -51,10 +51,7 @@ const GuidelinesScreen = () => {
       const userId = user.uid;
       const userRef = doc(firestore, 'users', userId);
       getDocs(collection(firestore, 'users', userId, 'tests')).then((docSnap) => {
-        // Örneğin, kullanıcı verilerini çekmek
       });
-
-      // Kullanıcı adını çekme
       firestore.collection('users').doc(userId).get().then((doc) => {
         if (doc.exists) {
           const userData = doc.data();
@@ -62,8 +59,6 @@ const GuidelinesScreen = () => {
         }
       });
     }
-
-    // Kılavuzları çekme
     fetchGuidelines();
   }, []);
 
@@ -94,22 +89,65 @@ const GuidelinesScreen = () => {
       });
   };
 
-  const handleAddGuideline = () => {
-    // Yeni kılavuz eklemek için bir ekran veya modal navigasyonu
-    navigation.navigate('AddGuidelineScreen');
+  const handleCreateGuideline = () => {
+    navigation.navigate('CreateGuidelineScreen');
   };
 
   const handleEditGuideline = (id) => {
-    // Kılavuz düzenleme ekranına navigasyon
     navigation.navigate('EditGuidelineScreen', { guidelineId: id });
+  };
+
+  const handleDeleteGuideline = async (id) => {
+    Alert.alert(
+      "Kılavuzu Sil",
+      "Bu kılavuzu silmek istediğinizden emin misiniz?",
+      [
+        { text: "İptal", style: "cancel" },
+        {
+          text: "Sil",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteDoc(doc(firestore, 'guidelines', id));
+              setGuidelines(guidelines.filter((guideline) => guideline.id !== id));
+              Alert.alert("Başarılı", "Kılavuz silindi!");
+            } catch (error) {
+              console.error("Silme işlemi sırasında hata: ", error);
+              Alert.alert("Hata", "Kılavuz silinemedi.");
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleAddData = (id) => {
+    navigation.navigate('AddData2GuidelineScreen', { guidelineId: id });
   };
 
   const renderGuidelineItem = ({ item }) => (
     <View style={[styles.guidelineItem, isDarkMode && styles.darkGuidelineItem]}>
-      <Text style={[styles.guidelineText, isDarkMode && styles.darkText]}>{item.name}</Text>
-      <TouchableOpacity onPress={() => handleEditGuideline(item.id)}>
-        <Ionicons name="create-outline" size={24} color="#007BFF" />
-      </TouchableOpacity>
+      <Text 
+        style={[styles.guidelineText, isDarkMode && styles.darkText]} 
+        numberOfLines={1} 
+        ellipsizeMode="tail"
+      >
+        {item.name}
+      </Text>
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity onPress={() => handleEditGuideline(item.id)} style={styles.button}>
+          <Ionicons name="create-outline" size={24} color="#007BFF" />
+          <Text style={styles.buttonText}>Düzenle</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => handleAddData(item.id)} style={styles.button}>
+          <Ionicons name="add-outline" size={24} color="#28A745" />
+          <Text style={styles.buttonText}>Veri Ekle</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => handleDeleteGuideline(item.id)} style={styles.button}>
+          <Ionicons name="trash-outline" size={24} color="#DC3545" />
+          <Text style={styles.buttonText}>Sil</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 
@@ -174,8 +212,8 @@ const GuidelinesScreen = () => {
           {/* Kılavuzlar Başlığı ve Ekle Butonu */}
           <View style={styles.header}>
             <Text style={[styles.headerText, isDarkMode && styles.darkText]}>Kılavuzlar</Text>
-            <TouchableOpacity style={styles.addButton} onPress={handleAddGuideline}>
-              <Text style={styles.addButtonText}>Kılavuz Ekle</Text>
+            <TouchableOpacity style={styles.addButton} onPress={handleCreateGuideline}>
+              <Text style={styles.addButtonText}>Kılavuz Oluştur</Text>
             </TouchableOpacity>
           </View>
 
@@ -312,9 +350,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '600',
   },
-  guidelinesList: {
-    // İsteğe bağlı: Listeyi kaydırılabilir yapmak için
-  },
   guidelineItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -326,11 +361,30 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   darkGuidelineItem: {
-    backgroundColor: '#555',
+    backgroundColor: '#444',
+    borderColor: '#555',
   },
   guidelineText: {
+    flex: 1,
     fontSize: 16,
-    color: '#333',
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#000',
+  },
+  buttonContainer: {
+    flexDirection: 'column', 
+    alignItems: 'flex-start',
+    gap: 5,
+  },
+  button: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 2,
+  },
+  buttonText: {
+    marginLeft: 5,
+    fontSize: 14,
+    color: '#007BFF',
   },
 });
 

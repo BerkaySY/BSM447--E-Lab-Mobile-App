@@ -8,7 +8,7 @@ const AdminHomeScreen = () => {
   const [isSideMenuVisible, setSideMenuVisible] = useState(false);
   const [isProfileMenuVisible, setProfileMenuVisible] = useState(false);
   const [userName, setUserName] = useState('');
-  const [isDarkMode, setIsDarkMode] = useState(false); // State to track mode
+  const [isDarkMode, setIsDarkMode] = useState(false); 
   const navigation = useNavigation(); 
 
   const toggleSideMenu = () => {
@@ -31,7 +31,7 @@ const AdminHomeScreen = () => {
   };
 
   const handleModeToggle = () => {
-    setIsDarkMode(!isDarkMode); // Toggle dark mode
+    setIsDarkMode(!isDarkMode); 
   };
 
   useEffect(() => {

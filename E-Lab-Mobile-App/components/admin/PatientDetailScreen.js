@@ -268,34 +268,6 @@ const styles = StyleSheet.create({
   mainContent: {
     padding: 20,
   },
-  labLogo: {
-    width: 120,
-    height: 120,
-    marginBottom: 20,
-  },
-  statCard: {
-    width: '90%',
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 15,
-    alignItems: 'center',
-    elevation: 2,
-  },
-  darkStatCard: {
-    backgroundColor: '#555',
-  },
-  statLabel: {
-    fontSize: 14,
-    color: '#555',
-    marginTop: 5,
-  },
-  statValue: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginTop: 5,
-    color: '#007BFF',
-  },
   profileCard: {
     backgroundColor: '#fff',
     borderRadius: 10,

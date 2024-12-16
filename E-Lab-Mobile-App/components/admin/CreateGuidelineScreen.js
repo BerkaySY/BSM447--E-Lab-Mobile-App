@@ -1,24 +1,36 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, TouchableWithoutFeedback, Switch,TextInput, KeyboardAvoidingView, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, TouchableWithoutFeedback, Switch, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native'; 
 import { auth, firestore } from '../../firebase';
-import { Picker } from '@react-native-picker/picker';
 
-
-const AddGuidelineScreen = () => {
+const CreateGuidelineScreen = () => {
   const [isSideMenuVisible, setSideMenuVisible] = useState(false);
   const [isProfileMenuVisible, setProfileMenuVisible] = useState(false);
   const [userName, setUserName] = useState('');
   const [isDarkMode, setIsDarkMode] = useState(false); 
   const navigation = useNavigation(); 
 
-  const [ageRange, setAgeRange] = useState('');
-  const [selectedValueName, setSelectedValueName] = useState('');
-  const [minValue, setMinValue] = useState('');
-  const [maxValue, setMaxValue] = useState('');
-  const valueNames = ['Değer 1', 'Değer 2', 'Değer 3'];
+  const [guideName, setGuideName] = useState('');
+  const [valueNames, setValueNames] = useState(['']);
 
+  const addValueField = () => {
+    setValueNames([...valueNames, '']);
+  };
+
+  const updateValueName = (text, index) => {
+    const updatedValues = [...valueNames];
+    updatedValues[index] = text;
+    setValueNames(updatedValues);
+  };
+
+  const removeLastValueField = () => {
+    if (valueNames.length > 1) {
+      setValueNames(valueNames.slice(0, -1));
+    } else {
+      Alert.alert('Uyarı', 'En az bir değer alanı olmalıdır.');
+    }
+  };
   const toggleSideMenu = () => {
     if (isProfileMenuVisible) {
       setProfileMenuVisible(false); 
@@ -56,14 +68,6 @@ const AddGuidelineScreen = () => {
     }
   }, []);
 
-  const handleAddData = () => {
-    if (!ageRange || !selectedValueName || !minValue || !maxValue) {
-      Alert.alert('Hata', 'Lütfen tüm alanları doldurun!');
-      return;
-    }
-    Alert.alert('Başarı', 'Veri başarıyla eklendi!');
-  };
-
   const handleLogOut = () => {
     auth
       .signOut()
@@ -78,6 +82,33 @@ const AddGuidelineScreen = () => {
       });
   };
 
+  const handleCreateGuide = async () => {
+    if (!guideName.trim()) {
+      Alert.alert('Hata', 'Kılavuz adını giriniz.');
+      return;
+    }
+    if (valueNames.some(value => !value.trim())) {
+      Alert.alert('Hata', 'Tüm değer alanlarını doldurunuz.');
+      return;
+    }
+  
+    try {
+      const newGuide = {
+        name: guideName,
+        value_names: valueNames,
+      };
+  
+      await firestore.collection('guidelines').add(newGuide);
+  
+      Alert.alert('Başarılı', 'Kılavuz başarıyla oluşturuldu.');
+      setGuideName('');
+      setValueNames(['']);
+    } catch (error) {
+      console.error('Firestore Hatası:', error);
+      Alert.alert('Hata', 'Kılavuz kaydedilirken bir hata oluştu.');
+    }
+  };
+  
   return (
     <TouchableWithoutFeedback onPress={closeMenus}>
       <View style={[styles.container, isDarkMode && styles.darkContainer]}>
@@ -135,56 +166,40 @@ const AddGuidelineScreen = () => {
         )}
 
         {/* Ana İçerik */}
-        <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
-          <ScrollView contentContainerStyle={styles.contentContainer}>
-            <View style={[styles.card, isDarkMode && styles.cardDark]}>
-              <Text style={[styles.label, isDarkMode && styles.darkText]}>Yaş Aralığı</Text>
-              <TextInput
-                style={[styles.input, isDarkMode && styles.inputDark]}
-                value={ageRange}
-                onChangeText={setAgeRange}
-                placeholder="Örn: 18-25"
-                placeholderTextColor={isDarkMode ? '#aaa' : '#888'}
-              />
+        <ScrollView contentContainerStyle={styles.mainContent}>
+          <View style={styles.card}>
+            <Text style={styles.label}>Kılavuz Adı:</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Kılavuz adı giriniz"
+              value={guideName}
+              onChangeText={setGuideName}
+            />
 
-              <Text style={[styles.label, isDarkMode && styles.darkText]}>Değer Adı</Text>
-              <View style={[styles.pickerContainer, isDarkMode && styles.pickerDark]}>
-                <Picker
-                  selectedValue={selectedValueName}
-                  onValueChange={(itemValue) => setSelectedValueName(itemValue)}
-                >
-                  <Picker.Item label="Seçiniz" value="" />
-                  {valueNames.map((valueName, index) => (
-                    <Picker.Item key={index} label={valueName} value={valueName} />
-                  ))}
-                </Picker>
-              </View>
-
-              <Text style={[styles.label, isDarkMode && styles.darkText]}>Minimum Değer</Text>
+            <Text style={styles.label}>Değer Adları:</Text>
+            {valueNames.map((value, index) => (
               <TextInput
-                style={[styles.input, isDarkMode && styles.inputDark]}
-                value={minValue}
-                onChangeText={setMinValue}
-                keyboardType="numeric"
-                placeholder="Min değer"
-                placeholderTextColor={isDarkMode ? '#aaa' : '#888'}
+                key={index}
+                style={styles.input}
+                placeholder={`Değer ${index + 1}`}
+                value={value}
+                onChangeText={(text) => updateValueName(text, index)}
               />
+            ))}
 
-              <Text style={[styles.label, isDarkMode && styles.darkText]}>Maksimum Değer</Text>
-              <TextInput
-                style={[styles.input, isDarkMode && styles.inputDark]}
-                value={maxValue}
-                onChangeText={setMaxValue}
-                keyboardType="numeric"
-                placeholder="Max değer"
-                placeholderTextColor={isDarkMode ? '#aaa' : '#888'}
-              />
-              <TouchableOpacity style={styles.button} onPress={handleAddData}>
-                <Text style={styles.buttonText}>Veriyi Ekle</Text>
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity style={styles.addButton} onPress={addValueField}>
+                <Text style={styles.addButtonText}>+</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.removeButton} onPress={removeLastValueField}>
+                <Text style={styles.removeButtonText}>-</Text>
               </TouchableOpacity>
             </View>
-          </ScrollView>
-        </KeyboardAvoidingView>
+            <TouchableOpacity style={styles.createButton} onPress={handleCreateGuide}>
+              <Text style={styles.createButtonText}>Kılavuzu Oluştur</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
       </View>
     </TouchableWithoutFeedback>
   );
@@ -289,74 +304,80 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
   },
+  
+  card: {
+    width: '90%',
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 2,
+    alignItems: 'center',
+  },
   label: {
     fontSize: 16,
     fontWeight: 'bold',
-    marginBottom: 5,
-    color: '#333',
+    marginBottom: 10,
+    alignSelf: 'flex-start',
   },
   input: {
+    width: '100%',
     height: 40,
     borderColor: '#ccc',
     borderWidth: 1,
     borderRadius: 5,
     paddingHorizontal: 10,
-    marginBottom: 15,
-    backgroundColor: '#fff',
-    color: '#333',
+    marginBottom: 10,
   },
-  inputDark: {
-    backgroundColor: '#555',
-    borderColor: '#777',
-    color: '#fff',
-  },
-  pickerContainer: {
-    height: 40,
-    borderColor: '#ccc',
-    borderWidth: 1,
-    borderRadius: 5,
-    justifyContent: 'center',
-    marginBottom: 15,
-    backgroundColor: '#fff',
-  },
-  picker: {
-    height: 40,
-    width: '100%',
-  },
-  pickerDark: {
-    backgroundColor: '#555',
-    borderColor: '#777',
-  },
-  button: {
-    backgroundColor: '#007BFF',
-    paddingVertical: 10,
+  addButton: {
+    backgroundColor: '#28a745',
+    padding: 10,
     borderRadius: 5,
     alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+    flex: 1,
   },
-  buttonText: {
+  addButtonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  removeButton: {
+    backgroundColor: '#dc3545',
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1,
+  },
+  removeButtonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
+  createButton: {
+    backgroundColor: '#007BFF',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  createButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
   },
-  contentContainer: {
-    flexGrow: 1,
-    alignItems: 'center',
-    padding: 20,
-  },
-  card: {
-    width: '90%',
-    padding: 20,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 5,
-  },
-  cardDark: {
-    backgroundColor: '#333',
-  },
 });
 
-export default AddGuidelineScreen;
+export default CreateGuidelineScreen;
