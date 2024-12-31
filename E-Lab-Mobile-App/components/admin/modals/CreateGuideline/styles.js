@@ -1,0 +1,105 @@
+import { StyleSheet } from "react-native";
+
+const styles = StyleSheet.create({
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    padding: 20,
+  },
+  modalContent: {
+    width: '100%',
+    backgroundColor: '#2d3436',
+    borderRadius: 16,
+    padding: 20,
+    maxHeight: '80%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+    color: '#ffffff',
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
+    color: '#bababa',
+  },
+  input: {
+    width: '100%',
+    height: 45,
+    borderColor: '#404040',
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 15,
+    marginBottom: 12,
+    backgroundColor: '#404040',
+    color: '#ffffff',
+    fontSize: 16,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  addButton: {
+    backgroundColor: '#28a745',
+    flex: 1,
+    padding: 10,
+    borderRadius: 12,
+    marginRight: 10,
+    alignItems: 'center',
+  },
+  removeButton: {
+    backgroundColor: '#dc3545',
+    flex: 1,
+    padding: 10,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
+  },
+  createButton: {
+    backgroundColor: '#007BFF',
+    flex: 1,
+    padding: 12,
+    borderRadius: 5,
+    marginRight: 10,
+    alignItems: 'center',
+  },
+  cancelButton: {
+    backgroundColor: '#6c757d',
+    flex: 1,
+    padding: 12,
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  createButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  cancelButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+});
+
+export default styles;

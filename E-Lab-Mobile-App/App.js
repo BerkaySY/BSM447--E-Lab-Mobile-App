@@ -1,17 +1,13 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import WelcomeScreen from './components/screens/WelcomeScreen'; 
-import LoginScreen from './components/screens/LoginScreen';
-import RegisterScreen from './components/screens/RegisterScreen';
-import AdminHomeScreen from './components/admin/AdminHomeScreen';
-import UserDashboard from './components/user/UserDashboard';
-import GuidelinesScreen from './components/admin/GuidelinesScreen';
-import PatientTrackingScreen from './components/admin/PatientTrackingScreen';
-import PatientDetailScreen from './components/admin/PatientDetailScreen';
-import CreateGuidelineScreen from './components/admin/CreateGuidelineScreen';
-import AddData2GuidelineScreen from './components/admin/AddData2GuidelineScreen';
-import EditGuidelineScreen from './components/admin/EditGuidelineScreen';
-
+import Welcome from './components/shared/screens/Welcome';
+import Login from './components/shared/screens/Login';
+import AdminHome from './components/admin/screens/AdminHome';
+import Guidelines from './components/admin/screens/Guidelines';
+import PatientTracking from './components/admin/screens/PatientTracking';
+import PatientDetail from './components/admin/screens/PatientDetail';
+import EditUserProfile from './components/user/screens/EditUserProfile';
+import UserHome from './components/user/screens/UserHome';
 
 const Stack = createStackNavigator();
 
@@ -22,17 +18,14 @@ const App = () => {
         initialRouteName="WelcomeScreen"
         screenOptions={{ headerShown: false }}
       >
-        <Stack.Screen name="WelcomeScreen" component={WelcomeScreen} />
-        <Stack.Screen name="LoginScreen" component={LoginScreen} />
-        <Stack.Screen name="AdminHomeScreen" component={AdminHomeScreen} />
-        <Stack.Screen name="GuidelinesScreen" component={GuidelinesScreen} />
-        <Stack.Screen name="PatientTrackingScreen" component={PatientTrackingScreen} />
-        <Stack.Screen name="PatientDetailScreen" component={PatientDetailScreen} />
-        <Stack.Screen name="CreateGuidelineScreen" component={CreateGuidelineScreen} />
-        <Stack.Screen name="EditGuidelineScreen" component={EditGuidelineScreen} />
-        <Stack.Screen name="AddData2GuidelineScreen" component={AddData2GuidelineScreen} />
-        <Stack.Screen name="UserDashboard" component={UserDashboard} />
-        <Stack.Screen name="Register" component={RegisterScreen} />
+        <Stack.Screen name="WelcomeScreen" component={Welcome} />
+        <Stack.Screen name="LoginScreen" component={Login} />
+        <Stack.Screen name="AdminHomeScreen" component={AdminHome} />
+        <Stack.Screen name="GuidelinesScreen" component={Guidelines} />
+        <Stack.Screen name="PatientTrackingScreen" component={PatientTracking} />
+        <Stack.Screen name="PatientDetailScreen" component={PatientDetail} />
+        <Stack.Screen name="EditUserProfileScreen" component={EditUserProfile} />
+        <Stack.Screen name="UserHomeScreen" component={UserHome} />
       </Stack.Navigator>
     </NavigationContainer>
   );

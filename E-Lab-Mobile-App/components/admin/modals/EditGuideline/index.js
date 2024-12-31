@@ -1,0 +1,167 @@
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, Alert, Modal, ScrollView, TextInput } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { firestore } from '../../../../firebase';
+import HeartBeatLoader from '../../../shared/animations/HeartBeatLoader';
+import styles from './styles';
+
+// Edit Guideline Modal Component
+const EditGuideline = ({ isVisible, onClose, guidelineId }) => {
+  const [guideName, setGuideName] = useState('');
+  const [valueNames, setValueNames] = useState(['']);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const addValueField = () => {
+    setValueNames([...valueNames, '']);
+  };
+  
+  const removeLastValueField = () => {
+    if (valueNames.length > 1) {
+      setValueNames(valueNames.slice(0, -1));
+    } else {
+      Alert.alert('Uyarı', 'En az bir değer alanı olmalıdır.');
+    }
+  };
+
+  const updateValueName = (text, index) => {
+    const updatedValues = [...valueNames];
+    updatedValues[index] = text;
+    setValueNames(updatedValues);
+  };
+
+  const fetchGuidelineData = async () => {
+    setIsLoading(true);
+    try {
+      const guidelineDoc = await firestore.collection('guidelines').doc(guidelineId).get();
+      if (guidelineDoc.exists) {
+        const guidelineData = guidelineDoc.data();
+        setGuideName(guidelineData.name || '');
+        setValueNames(guidelineData.value_names || ['']);
+      } else {
+        Alert.alert('Hata', 'Kılavuz bulunamadı.');
+        onClose();
+      }
+    } catch (error) {
+      console.error('Veri çekme hatası:', error);
+      Alert.alert('Hata', 'Kılavuz verisi alınırken bir hata oluştu.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (guidelineId) {
+      fetchGuidelineData();
+    }
+  }, [isVisible, guidelineId]);
+
+  const handleUpdateGuide = async () => {
+    if (!guideName.trim()) {
+      Alert.alert('Hata', 'Kılavuz adını giriniz.');
+      return;
+    }
+    if (valueNames.some(value => !value.trim())) {
+      Alert.alert('Hata', 'Tüm değer alanlarını doldurunuz.');
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const updatedGuide = {
+        name: guideName,
+        value_names: valueNames,
+      };
+
+      await firestore.collection('guidelines').doc(guidelineId).set(updatedGuide, {merge: true});
+
+      Alert.alert('Başarılı', 'Kılavuz başarıyla güncellendi.');
+      onClose();
+    } catch (error) {
+      console.error('Firestore güncelleme hatası:', error);
+      Alert.alert('Hata', 'Kılavuz güncellenirken bir hata oluştu.');
+    }
+    setIsLoading(false);
+  };
+
+  return (
+    <Modal
+      animationType="slide"
+      transparent={true}
+      visible={isVisible}
+      onRequestClose={onClose}
+    >
+      {isLoading && (<HeartBeatLoader/>)}
+      <View style={styles.modalContainer}>
+        <View style={styles.modalContent}>
+          <Text style={styles.modalTitle}>
+            Kılavuz Düzenle
+          </Text>
+          
+          <ScrollView style={styles.scrollView}>
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>
+                Kılavuz Adı
+              </Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Kılavuz adı giriniz"
+                placeholderTextColor='#666'
+                value={guideName}
+                onChangeText={setGuideName}
+              />
+
+              <Text style={[styles.label, styles.valueNamesLabel]}>
+                Değer Adları
+              </Text>
+              {valueNames.map((value, index) => (
+                <TextInput
+                  key={index}
+                  style={styles.input}
+                  placeholder={`Değer ${index + 1}`}
+                  placeholderTextColor={'#666'}
+                  value={value}
+                  onChangeText={(text) => updateValueName(text, index)}
+                />
+              ))}
+            </View>
+          </ScrollView>
+
+          <View style={styles.buttonRow}>
+            <TouchableOpacity 
+              style={[styles.iconButton, styles.addButton]} 
+              onPress={addValueField}
+            >
+              <Ionicons name="add" size={24} color="white" />
+              <Text style={styles.iconButtonText}>Değer Ekle</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.iconButton, styles.removeButton]} 
+              onPress={removeLastValueField}
+            >
+              <Ionicons name="remove" size={24} color="white" />
+              <Text style={styles.iconButtonText}>Değer Sil</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.actionButtons}>
+            <TouchableOpacity 
+              style={[styles.actionButton, styles.updateButton]} 
+              onPress={handleUpdateGuide}
+            >
+              <Text style={styles.actionButtonText}>Güncelle</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.actionButton, styles.cancelButton]} 
+              onPress={onClose}
+            >
+              <Text style={styles.actionButtonText}>İptal</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
+export default EditGuideline;

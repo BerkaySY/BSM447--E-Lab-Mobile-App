@@ -1,0 +1,142 @@
+import { StyleSheet } from "react-native";
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#1a1a1a',
+  },
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#2d3436',
+    paddingHorizontal: 15,
+    paddingTop: 50,
+    height: 100,
+  },
+  sideMenuProfile: {
+    position: 'absolute',
+    top: 100,
+    right: 0,
+    width: 220,
+    backgroundColor: '#2d3436',
+    borderLeftWidth: 1,
+    borderLeftColor: '#404040',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 5,
+    elevation: 5,
+    zIndex: 10,
+  },
+  profileHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#404040',
+  },
+  profileName: {
+    marginLeft: 10,
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#ffffff',
+  },
+  sideMenu: {
+    position: 'absolute',
+    top: 100,
+    left: 0,
+    width: 220,
+    backgroundColor: '#2d3436',
+    borderRightWidth: 1,
+    borderRightColor: '#404040',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 5,
+    elevation: 5,
+    zIndex: 10,
+  },
+  sideMenuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#404040',
+  },
+  sideMenuIcon: {
+    marginRight: 10,
+  },
+  sideMenuText: {
+    fontSize: 16,
+    color: '#ffffff',
+    fontWeight: '500',
+  },
+  mainContent: {
+    flex: 1,
+    padding: 20,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  headerText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#ffffff',
+  },
+  addButton: {
+    backgroundColor: '#4CAF50',
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    borderRadius: 12,
+  },
+  addButtonText: {
+    color: '#ffffff',
+    fontWeight: '600',
+  },
+  guidelineCard: {
+    
+  },
+  guidelineItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: '#2d3436',
+    borderRadius: 16,
+    marginBottom: 12,
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  guidelineText: {
+    flex: 1,
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    marginBottom: 16,
+  },
+  buttonContainer: {
+    flexDirection: 'column', 
+    alignItems: 'flex-start',
+    gap: 5,
+  },
+  button: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 2,
+  },
+  buttonText: {
+    marginLeft: 5,
+    fontSize: 14,
+    color: '#64d2ff',
+  },
+});
+
+export default styles;

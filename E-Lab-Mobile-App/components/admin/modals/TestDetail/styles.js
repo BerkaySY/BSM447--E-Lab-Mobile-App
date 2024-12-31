@@ -1,0 +1,199 @@
+import { StyleSheet } from "react-native";
+
+const styles = StyleSheet.create({
+  modalBackground: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+  },
+  modalContent: {
+    width: '90%',
+    maxHeight: '80%',
+    backgroundColor: '#2d3436',
+    padding: 20,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginBottom: 15,
+    color: '#ffffff',
+  },
+  tableContainer: {
+    flexGrow: 1,
+    maxHeight: '50%',
+    marginVertical: 10,
+  },
+  tableHeaderRow: {
+    flexDirection: 'row',
+    backgroundColor: '#404040',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderColor: '#505050',
+  },
+  tableRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderColor: '#404040',
+  },
+  tableHeader: {
+    width: '22%', // Sabit genişlik
+    fontWeight: 'bold',
+    textAlign: 'center',
+    fontSize: 14,
+    color: '#64d2ff',
+  },
+  tableCell: {
+    width: '22%', // Header ile aynı genişlik
+    textAlign: 'center',
+    fontSize: 13,
+    color: '#ffffff',
+  },
+  historyButton: {
+    width: '17%', // Geçmiş butonu için daha dar
+    alignItems: 'center',
+  },
+  iconCell: {
+    width: '17%', // Durum ikonu için daha dar
+    alignItems: 'center',
+  },
+  previousTestsModalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    padding: 20,
+  },
+  previousTestsContent: {
+    width: '90%',
+    maxHeight: '80%',
+    backgroundColor: '#2d3436',
+    borderRadius: 16,
+    overflow: 'hidden',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  previousTestsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#404040',
+    backgroundColor: '#404040',
+  },
+  previousTestsTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#ffffff',
+    flex: 1,
+  },
+  previousTestInfo: {
+    flex: 1,
+  },
+  comparisonContainer: {
+    alignItems: 'center',
+    marginLeft: 15,
+    minWidth: 70,
+  },
+  comparisonText: {
+    fontSize: 12,
+    color: '#bababa',
+    marginBottom: 5,
+  },
+  previousTestsCloseButton: {
+    padding: 5,
+  },
+  previousTestsList: {
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+  },
+  previousTestItem: {
+    backgroundColor: '#404040',
+    padding: 15,
+    marginVertical: 5,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#505050',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  previousTestDate: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  previousTestDateText: {
+    marginLeft: 8,
+    fontSize: 15,
+    color: '#64d2ff',
+    fontWeight: '500',
+  },
+  previousTestValue: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  previousTestValueText: {
+    marginLeft: 8,
+    fontSize: 15,
+    color: '#ffffff',
+  },
+  noDataContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 30,
+  },
+  noDataText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#bababa',
+    textAlign: 'center',
+  },
+  closeButton: {
+    marginTop: 20,
+    alignSelf: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    backgroundColor: '#007BFF',
+    borderRadius: 8,
+  },
+  closeButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  guidelineDisplay: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+    backgroundColor: '#404040',
+    borderRadius: 8,
+    marginBottom: 15,
+  },
+  guidelineLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#64d2ff',
+    marginRight: 10,
+  },
+  guidelineText: {
+    fontSize: 16,
+    color: '#ffffff',
+  },
+});
+
+export default styles;

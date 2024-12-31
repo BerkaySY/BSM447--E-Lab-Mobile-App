@@ -2,25 +2,55 @@ import React, { useState, useEffect } from 'react';
 import { 
   View, 
   Text, 
-  StyleSheet, 
   TouchableOpacity, 
   FlatList, 
   Alert, 
   TouchableWithoutFeedback, 
-  Switch 
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native'; 
-import { auth, firestore } from '../../firebase';
-import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { auth, firestore } from '../../../../firebase';
+import EditGuideline from '../../modals/EditGuideline';
+import CreateGuideline from '../../modals/CreateGuideline';
+import AddData2Guideline from '../../modals/AddData2Guideline';
+import GuidelineEditType from '../../modals/GuidelineEditType';
+import GuidelineValueSearch from '../../modals/GuidelineValueSearch';
+import EditGuidelineData from '../../modals/EditGuidelineData';
+import HeartBeatLoader from '../../../shared/animations/HeartBeatLoader';
+import styles from './styles';
 
-const GuidelinesScreen = () => {
+const Guidelines = () => {
   const [isSideMenuVisible, setSideMenuVisible] = useState(false);
   const [isProfileMenuVisible, setProfileMenuVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [userName, setUserName] = useState('');
-  const [isDarkMode, setIsDarkMode] = useState(false); 
   const [guidelines, setGuidelines] = useState([]);
+  const [selectedGuidelineForSearch, setSelectedGuidelineForSearch] = useState(null);
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [selectedGuideline, setSelectedGuideline] = useState(null);
+  const [editTypeModalVisible, setEditTypeModalVisible] = useState(false);
+  const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
+  const [isAddDataModalVisible, setIsAddDataModalVisible] = useState(false);
+  const [selectedGuidelineForAddData, setSelectedGuidelineForAddData] = useState(null);
+  const [isEditDataModalVisible, setIsEditDataModalVisible] = useState(false);
   const navigation = useNavigation(); 
+
+  
+  
+  const handleEditButton = (guideline) => {
+    setSelectedGuideline(guideline);
+    setEditTypeModalVisible(true);
+  };
+  
+  const handleSelectEditType = (type, guideline) => {
+    setEditTypeModalVisible(false);
+    if (type === 'editGuideline') {
+      setSelectedGuideline(guideline);
+      setEditModalVisible(true);
+    } else if (type === 'editData') {
+      setIsEditDataModalVisible(true);
+    }
+  };
 
   const toggleSideMenu = () => {
     if (isProfileMenuVisible) {
@@ -41,17 +71,10 @@ const GuidelinesScreen = () => {
     setProfileMenuVisible(false);
   };
 
-  const handleModeToggle = () => {
-    setIsDarkMode(!isDarkMode);
-  };
-
   useEffect(() => {
     const user = auth.currentUser;
     if (user) {
       const userId = user.uid;
-      const userRef = doc(firestore, 'users', userId);
-      getDocs(collection(firestore, 'users', userId, 'tests')).then((docSnap) => {
-      });
       firestore.collection('users').doc(userId).get().then((doc) => {
         if (doc.exists) {
           const userData = doc.data();
@@ -63,8 +86,9 @@ const GuidelinesScreen = () => {
   }, []);
 
   const fetchGuidelines = async () => {
+    setIsLoading(true);
     try {
-      const querySnapshot = await getDocs(collection(firestore, 'guidelines'));
+      const querySnapshot = await firestore.collection('guidelines').get();
       const guidelinesData = [];
       querySnapshot.forEach((doc) => {
         guidelinesData.push({ id: doc.id, ...doc.data() });
@@ -72,6 +96,8 @@ const GuidelinesScreen = () => {
       setGuidelines(guidelinesData);
     } catch (error) {
       console.error("Kılavuzlar çekilirken hata oluştu: ", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -90,12 +116,14 @@ const GuidelinesScreen = () => {
   };
 
   const handleCreateGuideline = () => {
-    navigation.navigate('CreateGuidelineScreen');
+    setIsCreateModalVisible(true);
   };
 
-  const handleEditGuideline = (id) => {
-    navigation.navigate('EditGuidelineScreen', { guidelineId: id });
+  const handleAddData = (guidelineId) => {
+    setSelectedGuidelineForAddData(guidelineId);
+    setIsAddDataModalVisible(true);
   };
+
 
   const handleDeleteGuideline = async (id) => {
     Alert.alert(
@@ -108,7 +136,7 @@ const GuidelinesScreen = () => {
           style: "destructive",
           onPress: async () => {
             try {
-              await deleteDoc(doc(firestore, 'guidelines', id));
+              await firestore.collection('guidelines').doc(id).delete();
               setGuidelines(guidelines.filter((guideline) => guideline.id !== id));
               Alert.alert("Başarılı", "Kılavuz silindi!");
             } catch (error) {
@@ -121,21 +149,17 @@ const GuidelinesScreen = () => {
     );
   };
 
-  const handleAddData = (id) => {
-    navigation.navigate('AddData2GuidelineScreen', { guidelineId: id });
-  };
-
   const renderGuidelineItem = ({ item }) => (
-    <View style={[styles.guidelineItem, isDarkMode && styles.darkGuidelineItem]}>
+    <View style={styles.guidelineItem}>
       <Text 
-        style={[styles.guidelineText, isDarkMode && styles.darkText]} 
+        style={styles.guidelineText} 
         numberOfLines={1} 
         ellipsizeMode="tail"
       >
         {item.name}
       </Text>
       <View style={styles.buttonContainer}>
-        <TouchableOpacity onPress={() => handleEditGuideline(item.id)} style={styles.button}>
+        <TouchableOpacity onPress={() => handleEditButton(item)} style={styles.button}>
           <Ionicons name="create-outline" size={24} color="#007BFF" />
           <Text style={styles.buttonText}>Düzenle</Text>
         </TouchableOpacity>
@@ -147,62 +171,59 @@ const GuidelinesScreen = () => {
           <Ionicons name="trash-outline" size={24} color="#DC3545" />
           <Text style={styles.buttonText}>Sil</Text>
         </TouchableOpacity>
+        <TouchableOpacity 
+          onPress={() => setSelectedGuidelineForSearch(item.id)} 
+          style={styles.button}
+        >
+          <Ionicons name="search-outline" size={24} color="#17A2B8" />
+          <Text style={styles.buttonText}>Değer Ara</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
 
   return (
     <TouchableWithoutFeedback onPress={closeMenus}>
-      <View style={[styles.container, isDarkMode && styles.darkContainer]}>
+      <View style={styles.container}>
+      {isLoading && (<HeartBeatLoader/>)}
         {/* Üst Bar */}
         <View style={[styles.topBar]}>
           <TouchableOpacity onPress={toggleSideMenu}>
-            <Ionicons name="menu" size={24} color={isDarkMode ? 'black' : 'white'} />
+            <Ionicons name="menu" size={24} color='white' />
           </TouchableOpacity>
           <TouchableOpacity onPress={toggleProfileMenu}>
-            <Ionicons name="person-circle" size={24} color={isDarkMode ? 'black' : 'white'} />
+            <Ionicons name="person-circle" size={24} color='white' />
           </TouchableOpacity>
         </View>
 
         {/* Profil Menüsü */}
         {isProfileMenuVisible && (
-          <View style={[styles.sideMenuProfile, isDarkMode && styles.darkSideMenu]}>
+          <View style={styles.sideMenuProfile}>
             <View style={styles.profileHeader}>
               <Ionicons name="person-circle" size={40} color="#007BFF" />
-              <Text style={[styles.profileName, isDarkMode && styles.darkText]}>{userName || 'Admin'}</Text>
+              <Text style={styles.profileName}>{userName || 'Admin'}</Text>
             </View>
             <TouchableOpacity style={styles.sideMenuItem} onPress={handleLogOut}>
-              <Text style={[styles.sideMenuText, isDarkMode && styles.darkText]}>Çıkış Yap</Text>
+              <Text style={styles.sideMenuText}>Çıkış Yap</Text>
             </TouchableOpacity>
-            <View style={styles.modeToggleContainer}>
-              <Text style={[styles.modeToggleText, isDarkMode && styles.darkText]}>
-                {isDarkMode ? 'Karanlık Mod' : 'Aydınlık Mod'}
-              </Text>
-              <Switch 
-                value={isDarkMode} 
-                onValueChange={handleModeToggle} 
-                trackColor={{ false: '#767577', true: '#81b0ff' }}
-                thumbColor={isDarkMode ? '#f5dd4b' : '#f4f3f4'}
-              />
-            </View>
           </View>
         )}
 
         {/* Yan Menü */}
         {isSideMenuVisible && (
-          <View style={[styles.sideMenu, isDarkMode && styles.darkSideMenu]}>
+          <View style={styles.sideMenu}>
             <TouchableOpacity style={styles.sideMenuItem} onPress={() => navigation.navigate('AdminHomeScreen')}>
               <Ionicons name="stats-chart" size={20} color="#007BFF" style={styles.sideMenuIcon} />
-              <Text style={[styles.sideMenuText, isDarkMode && styles.darkText]}>İstatistikler</Text>
+              <Text style={styles.sideMenuText}>İstatistikler</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.sideMenuItem} onPress={() => navigation.navigate('PatientTrackingScreen')}>
               <Ionicons name="people" size={20} color="#007BFF" style={styles.sideMenuIcon} />
-              <Text style={[styles.sideMenuText, isDarkMode && styles.darkText]}>Hasta Takibi</Text>
+              <Text style={styles.sideMenuText}>Hasta Takibi</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.sideMenuItem} onPress={() => navigation.navigate('GuidelinesScreen')}>
               <Ionicons name="book" size={20} color="#007BFF" style={styles.sideMenuIcon} />
-              <Text style={[styles.sideMenuText, isDarkMode && styles.darkText]}>Kılavuzlar</Text>
+              <Text style={styles.sideMenuText}>Kılavuzlar</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -211,7 +232,7 @@ const GuidelinesScreen = () => {
         <View style={styles.mainContent}>
           {/* Kılavuzlar Başlığı ve Ekle Butonu */}
           <View style={styles.header}>
-            <Text style={[styles.headerText, isDarkMode && styles.darkText]}>Kılavuzlar</Text>
+            <Text style={styles.headerText}>Kılavuzlar</Text>
             <TouchableOpacity style={styles.addButton} onPress={handleCreateGuideline}>
               <Text style={styles.addButtonText}>Kılavuz Oluştur</Text>
             </TouchableOpacity>
@@ -224,168 +245,53 @@ const GuidelinesScreen = () => {
             renderItem={renderGuidelineItem}
             contentContainerStyle={styles.guidelinesList}
           />
+          
+          {selectedGuidelineForSearch && (
+          <GuidelineValueSearch
+            isVisible={!!selectedGuidelineForSearch}
+            onClose={() => setSelectedGuidelineForSearch(null)}
+            guidelineId={selectedGuidelineForSearch}
+          />
+          
+          )}
+          <AddData2Guideline
+            isVisible={isAddDataModalVisible}
+            onClose={() => setIsAddDataModalVisible(false)}
+            guidelineId={selectedGuidelineForAddData}
+          />
+          <GuidelineEditType
+            isVisible={editTypeModalVisible}
+            onClose={() => setEditTypeModalVisible(false)}
+            onSelectEditType={handleSelectEditType}
+            guideline={selectedGuideline}
+          />
+
+          <EditGuideline
+            isVisible={editModalVisible}
+            onClose={() => {
+              setEditModalVisible(false);
+              setSelectedGuideline(null);
+            }}
+            guidelineId={selectedGuideline?.id}
+          />
+          <EditGuidelineData
+            isVisible={isEditDataModalVisible}
+            onClose={() => {
+              setIsEditDataModalVisible(false);
+            }}
+            guidelineId={selectedGuideline?.id}
+          />
         </View>
+        <CreateGuideline
+          isVisible={isCreateModalVisible}
+          onClose={() => {
+            setIsCreateModalVisible(false);
+            fetchGuidelines();}
+          }
+        />
       </View>
     </TouchableWithoutFeedback>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f4f4f4',
-  },
-  darkContainer: {
-    backgroundColor: '#333',
-  },
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#007BFF',
-    paddingHorizontal: 15,
-    paddingTop: 50,
-    height: 100,
-  },
-  sideMenuProfile: {
-    position: 'absolute',
-    top: 100,
-    right: 0,
-    width: 220,
-    height: '100%',
-    backgroundColor: '#fff',
-    borderLeftWidth: 1,
-    borderLeftColor: '#ddd',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 5,
-    zIndex: 10,
-  },
-  darkSideMenu: {
-    backgroundColor: '#444',
-  },
-  profileHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
-  },
-  profileName: {
-    marginLeft: 10,
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  darkText: {
-    color: '#fff',
-  },
-  sideMenu: {
-    position: 'absolute',
-    top: 100,
-    left: 0,
-    width: 220,
-    height: '100%',
-    backgroundColor: '#fff',
-    borderRightWidth: 1,
-    borderRightColor: '#ddd',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 5,
-    zIndex: 10,
-  },
-  sideMenuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  sideMenuIcon: {
-    marginRight: 10,
-  },
-  sideMenuText: {
-    fontSize: 16,
-    color: '#333',
-    fontWeight: '500',
-  },
-  modeToggleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-  },
-  modeToggleText: {
-    fontSize: 16,
-    marginRight: 10,
-    color: '#333',
-  },
-  mainContent: {
-    flex: 1,
-    padding: 20,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  headerText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  addButton: {
-    backgroundColor: 'green',
-    paddingVertical: 8,
-    paddingHorizontal: 15,
-    borderRadius: 5,
-  },
-  addButtonText: {
-    color: '#fff',
-    fontWeight: '600',
-  },
-  guidelineItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 15,
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    marginBottom: 10,
-    elevation: 2,
-  },
-  darkGuidelineItem: {
-    backgroundColor: '#444',
-    borderColor: '#555',
-  },
-  guidelineText: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#000',
-  },
-  buttonContainer: {
-    flexDirection: 'column', 
-    alignItems: 'flex-start',
-    gap: 5,
-  },
-  button: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 2,
-  },
-  buttonText: {
-    marginLeft: 5,
-    fontSize: 14,
-    color: '#007BFF',
-  },
-});
-
-export default GuidelinesScreen;
+export default Guidelines;

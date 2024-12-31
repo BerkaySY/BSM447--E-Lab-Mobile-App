@@ -1,0 +1,138 @@
+import { StyleSheet } from "react-native";
+
+const styles = StyleSheet.create({
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+  },
+  modalContent: {
+    width: '90%',
+    backgroundColor: '#2d3436',
+    borderRadius: 16,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    marginBottom: 24,
+    textAlign: 'center',
+    color: '#ffffff',
+  },
+  modalButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 24,
+    gap: 12,
+  },
+  modalCancelButton: {
+    flex: 1,
+    backgroundColor: '#404040',
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#4a4a4a',
+  },
+  modalCancelButtonText: {
+    color: '#bababa',
+    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  modalCreateButton: {
+    flex: 1,
+    backgroundColor: '#0084ff',
+    padding: 16,
+    borderRadius: 12,
+  },
+  modalCreateButtonText: {
+    color: '#ffffff',
+    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  immunoglobulinButton: {
+    backgroundColor: '#10B981',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  immunoglobulinButtonText: {
+    color: '#ffffff',
+    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  input: {
+    height: 56,
+    borderWidth: 1.5,
+    borderColor: '#404040',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    fontSize: 16,
+    backgroundColor: '#404040',
+    color: '#ffffff',
+  },
+  guidelineSelector: {
+    height: 56,
+    borderWidth: 1.5,
+    borderColor: '#404040',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    backgroundColor: '#404040',
+    justifyContent: 'center',
+  },
+  guidelineSelectorText: {
+    fontSize: 16,
+    color: '#ffffff',
+  },
+  guidelineScrollView: {
+    maxHeight: 300,
+    marginBottom: 16,
+  },
+  guidelineOption: {
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 8,
+    backgroundColor: '#404040',
+  },
+  selectedGuidelineOption: {
+    backgroundColor: '#0084ff',
+  },
+  guidelineOptionText: {
+    fontSize: 16,
+    color: '#ffffff',
+  },
+  selectedGuidelineText: {
+    fontWeight: '600',
+  },
+  guidelineCancelButton: {
+    flex: 1,
+    backgroundColor: 'red',
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#4a4a4a',
+  },
+  guidelineCancelButtonText: {
+    color: '#bababa',
+    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+});
+
+export default styles;
