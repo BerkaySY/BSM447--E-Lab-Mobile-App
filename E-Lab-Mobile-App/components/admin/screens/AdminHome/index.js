@@ -22,6 +22,21 @@ const AdminHome = () => {
     }
     setSideMenuVisible(!isSideMenuVisible);
   };
+
+  const formatTimestamp = (timestamp) => {
+    if (!timestamp) return '';
+    
+    const date = timestamp.toDate();
+    
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const seconds = date.getSeconds().toString().padStart(2, '0');
+
+    return `${day}.${month}.${year} ${hours}:${minutes}:${seconds}`;
+  };
   
   const toggleProfileMenu = () => {
     if (isSideMenuVisible) {
@@ -57,9 +72,9 @@ const AdminHome = () => {
     try {
       const snapshot = await firestore
         .collection('users')
-        .where('role', '==', 'user')  // Filter by role
+        .where('role', '==', 'user')  
         .get();
-      setUserCount(snapshot.size);  // Set the count of users
+      setUserCount(snapshot.size); 
     } catch (error) {
       console.error('Error fetching user count: ', error);
     } finally {
@@ -70,20 +85,19 @@ const AdminHome = () => {
   const fetchTestCount = async () => {
     setIsLoading(true);
     firestore.collection('users')
-      .where('role', '==', 'user')  // User rolündeki kullanıcıları filtrele
+      .where('role', '==', 'user') 
       .get()
       .then(querySnapshot => {
         let totalTests = 0;
 
         querySnapshot.forEach(doc => {
-          // Her kullanıcı için 'tests' koleksiyonundaki doküman sayısını al
           firestore.collection('users')
             .doc(doc.id)
             .collection('tests')
             .get()
             .then(testSnapshot => {
-              totalTests += testSnapshot.size;  // Toplam tahlil sayısını artır
-              setTestsCount(totalTests);  // Sonucu state'e kaydet
+              totalTests += testSnapshot.size;
+              setTestsCount(totalTests);
             });
         });
       });
@@ -93,8 +107,8 @@ const AdminHome = () => {
   const fetchGuidelinesCount = async () => {
     setIsLoading(true);
     try {
-      const snapshot = await firestore.collection('guidelines').get();  // Fetch guidelines collection
-      setGuidelinesCount(snapshot.size);  // Set the count of guidelines
+      const snapshot = await firestore.collection('guidelines').get();
+      setGuidelinesCount(snapshot.size); 
     } catch (error) {
       console.error('Error fetching guidelines count: ', error);
     } 

@@ -50,6 +50,21 @@ const TestDetail = ({ isVisible, onClose, testDetails, patientAge, patientId }) 
     return value;
   };
 
+  const formatTimestamp = (timestamp) => {
+    if (!timestamp) return '';
+    
+    const date = timestamp.toDate();
+    
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const seconds = date.getSeconds().toString().padStart(2, '0');
+
+    return `${day}.${month}.${year} ${hours}:${minutes}:${seconds}`;
+  };
+
   const getComparisonIcon = (currentValue, referenceRange) => {
   // Referans değeri yoksa karşılaştırma yapma
   if (!referenceRange || referenceRange === "Yükleniyor..." || 
@@ -323,9 +338,45 @@ const getHistoricalComparisonIcon = (currentValue, previousValue) => {
         <View style={styles.modalContent}>
           <Text style={styles.modalTitle}>Test Detayları</Text>
 
-          <View style={styles.guidelineDisplay}>
-            <Text style={styles.guidelineLabel}>Değerlendirildiği Kılavuz:</Text>
-            <Text style={styles.guidelineText}>{guidelineName || "Yükleniyor..."}</Text>
+          <View style={styles.guidelineSection}>
+            <View style={styles.guidelineDisplay}>
+              <Text style={styles.guidelineLabel}>Değerlendirildiği Kılavuz:</Text>
+              <Text style={styles.guidelineText}>{guidelineName || "Yükleniyor..."}</Text>
+            </View>
+
+            <View style={styles.testTimingContainer}>
+              <View style={styles.testTimingRow}>
+                <Ionicons name="document-text-outline" size={18} color="#64d2ff" />
+                <Text style={styles.testTimingLabel}>Protokol No:</Text>
+                <Text style={styles.testTimingValue}>{testDetails?.protokolNo}</Text>
+              </View>
+
+              <View style={styles.testTimingRow}>
+                <Ionicons name="time-outline" size={18} color="#64d2ff" />
+                <Text style={styles.testTimingLabel}>İstem Zamanı:</Text>
+                <Text style={styles.testTimingValue}>{testDetails?.istemZamani}</Text>
+              </View>
+
+              <View style={styles.testTimingRow}>
+                <Ionicons name="flask-outline" size={18} color="#64d2ff" />
+                <Text style={styles.testTimingLabel}>Numune Alma:</Text>
+                <Text style={styles.testTimingValue}>{testDetails?.numunealmaZamani}</Text>
+              </View>
+
+              <View style={styles.testTimingRow}>
+                <Ionicons name="checkmark-circle-outline" size={18} color="#64d2ff" />
+                <Text style={styles.testTimingLabel}>Numune Kabul:</Text>
+                <Text style={styles.testTimingValue}>{testDetails?.numunekabulZamani}</Text>
+              </View>
+
+              <View style={styles.testTimingRow}>
+                <Ionicons name="shield-checkmark-outline" size={18} color="#64d2ff" />
+                <Text style={styles.testTimingLabel}>Uzman Onay:</Text>
+                <Text style={styles.testTimingValue}>
+                  {formatTimestamp(testDetails?.createdAt)}
+                </Text>
+              </View>
+            </View>
           </View>
 
           <ScrollView style={styles.tableContainer}>

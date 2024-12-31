@@ -46,24 +46,24 @@ const styles = StyleSheet.create({
     borderColor: '#404040',
   },
   tableHeader: {
-    width: '22%', // Sabit genişlik
+    width: '22%', 
     fontWeight: 'bold',
     textAlign: 'center',
     fontSize: 14,
     color: '#64d2ff',
   },
   tableCell: {
-    width: '22%', // Header ile aynı genişlik
+    width: '22%', 
     textAlign: 'center',
     fontSize: 13,
     color: '#ffffff',
   },
   historyButton: {
-    width: '17%', // Geçmiş butonu için daha dar
+    width: '17%', 
     alignItems: 'center',
   },
   iconCell: {
-    width: '17%', // Durum ikonu için daha dar
+    width: '17%', 
     alignItems: 'center',
   },
   previousTestsModalContainer: {
@@ -176,13 +176,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
   },
+  guidelineSection: {
+    backgroundColor: '#363636',
+    borderRadius: 12,
+    padding: 15,
+    marginBottom: 15,
+  },
   guidelineDisplay: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 10,
     backgroundColor: '#404040',
     borderRadius: 8,
-    marginBottom: 15,
+    marginBottom: 10,
   },
   guidelineLabel: {
     fontSize: 16,
@@ -193,6 +199,28 @@ const styles = StyleSheet.create({
   guidelineText: {
     fontSize: 16,
     color: '#ffffff',
+  },
+  testTimingContainer: {
+    backgroundColor: '#404040',
+    borderRadius: 8,
+    padding: 12,
+  },
+  testTimingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 6,
+  },
+  testTimingLabel: {
+    fontSize: 14,
+    color: '#64d2ff',
+    marginLeft: 8,
+    marginRight: 8,
+    width: 100,
+  },
+  testTimingValue: {
+    fontSize: 14,
+    color: '#ffffff',
+    flex: 1,
   },
 });
 

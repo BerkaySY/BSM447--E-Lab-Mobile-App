@@ -86,16 +86,16 @@ const PatientDetail = () => {
   const fetchPatientTests = async () => {
     setIsLoading(true);
     try {
-      const { patientId } = route.params; // Hasta ID'si
+      const { patientId } = route.params; 
       const testsRef = firestore
         .collection('users')
         .doc(patientId)
-        .collection('tests'); // Alt koleksiyon
+        .collection('tests'); 
       
       const snapshot = await testsRef.orderBy('createdAt', 'desc').get();
       const tests = snapshot.docs.map(doc => ({
         id: doc.id,
-        ...doc.data() // Test verilerini burada alıyoruz
+        ...doc.data() 
       }));
       
       setPatientTests(tests);
@@ -128,21 +128,17 @@ const PatientDetail = () => {
     const birthDateObj = new Date(birthDate);
     const today = new Date();
   
-    // Farklı yılları kapsayan tarih farkını hesaplamak için ay ve gün farkını hesaba kat
     const totalMonths = 
       (today.getFullYear() - birthDateObj.getFullYear()) * 12 + 
       (today.getMonth() - birthDateObj.getMonth());
     const dayDiff = today.getDate() - birthDateObj.getDate();
   
-    // Eğer gün farkı negatifse, bir ay eksilt
     const effectiveMonths = dayDiff < 0 ? totalMonths - 1 : totalMonths;
   
-    // Eğer yaş 1 yıldan küçükse
     if (effectiveMonths < 12) {
       return `${effectiveMonths} ay`;
     }
   
-    // Yaş 1 yıl veya daha fazlaysa
     const years = Math.floor(effectiveMonths / 12);
     return `${years} yıl`;
   };
@@ -199,8 +195,8 @@ const PatientDetail = () => {
               <TouchableOpacity 
                 style={styles.testDetailsButton}
                 onPress={() => {
-                  setSelectedTest(test); // Seçilen tahlili güncelle
-                  setTestDetailModalVisible(true); // Modalı aç
+                  setSelectedTest(test); 
+                  setTestDetailModalVisible(true);
                 }}
               >
                 <Text style={styles.testDetailsButtonText}>Detaylar</Text>

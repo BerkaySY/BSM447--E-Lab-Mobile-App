@@ -24,10 +24,8 @@ const EditUserProfile = () => {
   const navigation = useNavigation();
 
   const formatPhoneNumber = (text) => {
-    // Remove non-digit characters
     const cleaned = text.replace(/\D/g, '');
     
-    // Limit to 11 digits
     const limited = cleaned.slice(0, 11);
     
     setPhoneNumber(limited);
@@ -86,31 +84,28 @@ const EditUserProfile = () => {
   };
 
   const handleProfileUpdate = async () => {
-    const user = auth.currentUser; // Mevcut kullanıcıyı al
+    const user = auth.currentUser; 
     if (user) {
-      const userId = user.uid; // Kullanıcının UID'sini al
-      const userRef = firestore.collection('users').doc(userId); // Kullanıcı dokümanına referans
+      const userId = user.uid; 
+      const userRef = firestore.collection('users').doc(userId); 
 
       try {
-        // Güncelleme verilerini oluştur
         const updateData = {
           fullName: userName,
           gender: gender,
           birthDate: birthDate,
-          role: 'user', // Sabit bir role atanıyor, gerekirse özelleştirin
+          role: 'user', 
           tcId: tcId,
-          email: email, // Sadece Firestore'daki email alanını güncelliyoruz
+          email: email,
           phoneNumber: phoneNumber,
         };
 
-        // Geçersiz e-posta kontrolü
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email) && email) {
           Alert.alert('Hata', 'Geçersiz e-posta adresi. Lütfen geçerli bir e-posta adresi giriniz.');
           return;
         }
 
-        // Firestore dokümanını güncelle
         await userRef.update(updateData);
 
         Alert.alert('Başarılı', 'Profil bilgileri güncellendi.');
@@ -151,13 +146,10 @@ const EditUserProfile = () => {
         oldPassword
       );
   
-      // Kullanıcının kimlik doğrulamasını yap
       await user.reauthenticateWithCredential(credential);
   
-      // Şifreyi güncelle
       await user.updatePassword(newPassword);
   
-      // State'leri temizle
       setOldPassword('');
       setNewPassword('');
       setConfirmNewPassword('');
@@ -228,7 +220,7 @@ const EditUserProfile = () => {
                   value={email}
                   onChangeText={(text) => setEmail(text.slice(0, 50))}
                   keyboardType="email-address"
-                  maxLength={35} // Maksimum 50 karakter
+                  maxLength={35}
                 />
               </View>
               <TouchableOpacity 

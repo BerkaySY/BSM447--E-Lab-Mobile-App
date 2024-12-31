@@ -3,13 +3,13 @@ import { StyleSheet } from 'react-native';
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a1a1a', // Koyu arka plan
+    backgroundColor: '#1a1a1a', 
   },
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#2d3436', // Koyu üst bar
+    backgroundColor: '#2d3436',
     paddingHorizontal: 15,
     paddingTop: 50,
     height: 100,
@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
   },
   cardHeaderIcon: {
     marginRight: 10,
-    color: '#64d2ff', // Parlak mavi
+    color: '#64d2ff', 
   },
   cardTitle: {
     fontSize: 18,
@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
     width: '50%',
     marginTop: 15,
     padding: 12,
-    backgroundColor: '#0084ff', // Canlı mavi
+    backgroundColor: '#0084ff',
     borderRadius: 25,
     alignItems: 'center',
     alignSelf: 'center',
@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
   },
   icon: {
     marginRight: 10,
-    color: '#64d2ff', // Parlak mavi
+    color: '#64d2ff', 
   },
   pickerContainer: {
     flexDirection: 'row',

@@ -6,7 +6,7 @@ const styles = StyleSheet.create({
       justifyContent: 'center',
       alignItems: 'center',
       backgroundColor: 'rgba(0, 0, 0, 0.5)',
-      padding: 10, // 20'den 10'a düşürün veya tamamen kaldırın
+      padding: 10,
     },
       modalContent: {
         backgroundColor: '#2d3436',
@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 15,
         marginBottom: 12,
         backgroundColor: '#1a1a1a',
-        justifyContent: 'center', // Dikey hizalama için
+        justifyContent: 'center', 
       },
       pickerButtonText: {
         color: '#ffffff',
