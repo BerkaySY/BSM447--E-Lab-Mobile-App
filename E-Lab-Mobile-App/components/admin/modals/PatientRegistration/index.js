@@ -91,7 +91,6 @@ const PatientRegistration = ({
                     setFormData({...formData, birthDate: filteredText});
                   }}
                   maxLength={10}
-                  keyboardType="numeric"
                 />
               </View>
 

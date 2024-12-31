@@ -86,7 +86,6 @@ const AddData2Guideline = ({ isVisible, onClose, guidelineId }) => {
       await ageRangeDocRef.set(newData);
       Alert.alert('Başarı', 'Veri başarıyla eklendi!');
   
-      // Reset form fields
       setAgeRange('');
       setIntervalType('');
       setSelectedValueName('');

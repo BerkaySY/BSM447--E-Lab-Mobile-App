@@ -38,16 +38,23 @@ const Guidelines = () => {
   
   
   const handleEditButton = (guideline) => {
-    setSelectedGuideline(guideline);
-    setEditTypeModalVisible(true);
+    if (guideline && guideline.id) { 
+      setSelectedGuideline(guideline);
+      setEditTypeModalVisible(true);
+    } else {
+      Alert.alert("Hata", "Geçersiz kılavuz seçimi.");
+    }
   };
   
-  const handleSelectEditType = (type, guideline) => {
+  const handleSelectEditType = (type, guidelineId) => {
+    const guideline = guidelines.find(g => g.id === guidelineId);
+    
     setEditTypeModalVisible(false);
     if (type === 'editGuideline') {
       setSelectedGuideline(guideline);
       setEditModalVisible(true);
     } else if (type === 'editData') {
+      setSelectedGuideline(guideline);
       setIsEditDataModalVisible(true);
     }
   };
@@ -271,8 +278,9 @@ const Guidelines = () => {
             onClose={() => {
               setEditModalVisible(false);
               setSelectedGuideline(null);
+              fetchGuidelines(); 
             }}
-            guidelineId={selectedGuideline?.id}
+            guidelineId={selectedGuideline?.id || ''} 
           />
           <EditGuidelineData
             isVisible={isEditDataModalVisible}

@@ -12,7 +12,7 @@ const AddTest = ({ isVisible, onClose, onSubmit, patientId }) => {
     numunealmaZamani: '',
     numunekabulZamani: '',
     selectedGuideline: '',
-    selectedGuidelineName: '', // Kılavuz adını göstermek için eklendi
+    selectedGuidelineName: '', 
     immunoglobulinValues: {
       IgA: '',
       IgM: '',

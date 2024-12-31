@@ -5,11 +5,21 @@ import { firestore } from '../../../../firebase';
 import HeartBeatLoader from '../../../shared/animations/HeartBeatLoader';
 import styles from './styles';
 
-// Edit Guideline Modal Component
 const EditGuideline = ({ isVisible, onClose, guidelineId }) => {
   const [guideName, setGuideName] = useState('');
   const [valueNames, setValueNames] = useState(['']);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (isVisible && guidelineId) {
+      fetchGuidelineData();
+    } else {
+      if (isVisible && !guidelineId) {
+        Alert.alert('Hata', 'Geçersiz kılavuz ID\'si');
+        onClose();
+      }
+    }
+  }, [isVisible, guidelineId]);
 
   const addValueField = () => {
     setValueNames([...valueNames, '']);
@@ -28,7 +38,7 @@ const EditGuideline = ({ isVisible, onClose, guidelineId }) => {
     updatedValues[index] = text;
     setValueNames(updatedValues);
   };
-
+  
   const fetchGuidelineData = async () => {
     setIsLoading(true);
     try {
@@ -56,6 +66,11 @@ const EditGuideline = ({ isVisible, onClose, guidelineId }) => {
   }, [isVisible, guidelineId]);
 
   const handleUpdateGuide = async () => {
+    if (!guidelineId) {
+      Alert.alert('Hata', 'Geçersiz kılavuz ID\'si');
+      return;
+    }
+  
     if (!guideName.trim()) {
       Alert.alert('Hata', 'Kılavuz adını giriniz.');
       return;
@@ -64,22 +79,33 @@ const EditGuideline = ({ isVisible, onClose, guidelineId }) => {
       Alert.alert('Hata', 'Tüm değer alanlarını doldurunuz.');
       return;
     }
+    
     setIsLoading(true);
     try {
+      const docRef = firestore.collection('guidelines').doc(guidelineId);
+      const docSnapshot = await docRef.get();
+      
+      if (!docSnapshot.exists) {
+        Alert.alert('Hata', 'Güncellenecek kılavuz bulunamadı. Sayfa yenilenecek.');
+        onClose();
+        return;
+      }
+  
       const updatedGuide = {
-        name: guideName,
-        value_names: valueNames,
+        name: guideName.trim(),
+        value_names: valueNames.map(value => value.trim()),
       };
-
-      await firestore.collection('guidelines').doc(guidelineId).set(updatedGuide, {merge: true});
-
+  
+      await docRef.update(updatedGuide);
+  
       Alert.alert('Başarılı', 'Kılavuz başarıyla güncellendi.');
       onClose();
     } catch (error) {
       console.error('Firestore güncelleme hatası:', error);
-      Alert.alert('Hata', 'Kılavuz güncellenirken bir hata oluştu.');
+      Alert.alert('Hata', `Güncelleme hatası: ${error.message}`);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   return (
